@@ -1,0 +1,18 @@
+# 2025/11/04 12:37:22.472913 [TestProperty_PacingCurveAdherence/EXPONENTIAL] [rapid] draw seed: 0x0
+# 2025/11/04 12:37:22.472929 [TestProperty_PacingCurveAdherence/EXPONENTIAL] [rapid] draw roomCount: 45
+# 2025/11/04 12:37:22.472940 [TestProperty_PacingCurveAdherence/EXPONENTIAL] [rapid] draw variance: 0.08935776352882385
+# 2025/11/04 12:37:22.473365 [TestProperty_PacingCurveAdherence/EXPONENTIAL] ✓ EXPONENTIAL curve adhered to (MAD=0.037, variance=0.089, pathLen=3)
+# 
+v0.4.8#6979199755213700299
+0xb8e7089af86
+0x0
+0x15fb0475a5ece3
+0x16c13222e059a1
+0x1e
+0x10e66f89ff49ae
+0x1e6228a24b796c
+0x18b4a3645a82d0
+0x2
+0x0
+0x15
+0x6e026fd2c7d0c

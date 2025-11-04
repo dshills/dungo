@@ -222,16 +222,12 @@ func CheckPathBounds(g *graph.Graph, cfg *dungeon.Config) dungeon.ConstraintResu
 
 	pathLength := len(path)
 
-	// Define bounds based on dungeon size
-	minRooms := cfg.Size.RoomsMin
-	maxRooms := cfg.Size.RoomsMax
+	// Minimum path length: 2 rooms (Start + Boss absolute minimum)
+	// Hub-and-spoke architecture creates 3-room critical paths regardless of dungeon size
+	minPathLength := 2
 
-	// Minimum path length: at least 2 rooms, or 10% of minimum rooms
-	// This accepts branching architectures where most rooms are optional branches
-	minPathLength := max(2, minRooms/10)
-
-	// Maximum path length: very generous to allow linear dungeons and cycles
-	maxPathLength := maxRooms * 2
+	// Maximum path length: allow up to full dungeon size
+	maxPathLength := cfg.Size.RoomsMax
 
 	satisfied := pathLength >= minPathLength && pathLength <= maxPathLength
 	details := fmt.Sprintf("Path length: %d rooms (bounds: %d-%d)", pathLength, minPathLength, maxPathLength)

@@ -1,0 +1,51 @@
+# 2025/11/04 13:34:15.991558 [TestProperty_RoomCountBounds] [rapid] draw roomsMin: 10
+# 2025/11/04 13:34:15.991572 [TestProperty_RoomCountBounds] [rapid] draw roomsMax: 11
+# 2025/11/04 13:34:15.991583 [TestProperty_RoomCountBounds] [rapid] draw branchingAvg: 1.8737068339203233
+# 2025/11/04 13:34:15.991595 [TestProperty_RoomCountBounds] [rapid] draw branchingMax: 2
+# 2025/11/04 13:34:15.991602 [TestProperty_RoomCountBounds] [rapid] draw pacingVariance: 1.9313472839512794e-22
+# 2025/11/04 13:34:15.991612 [TestProperty_RoomCountBounds] [rapid] draw secretDensity: 5.061841554944652e-74
+# 2025/11/04 13:34:15.991623 [TestProperty_RoomCountBounds] [rapid] draw optionalRatio: 0.33712055532589247
+# 2025/11/04 13:34:15.991631 [TestProperty_RoomCountBounds] [rapid] draw seed: 0x32fd
+# 2025/11/04 13:34:16.003574 [TestProperty_RoomCountBounds] Generate() failed: carving failed: stamping room room_3: stamping rectangle for room room_3: position (58, 56) out of bounds [0, 114) x [0, 35)
+# 
+v0.4.8#9690345831063354798
+0x9e3405bc1bfe5
+0x1caa5c3f00d2c
+0x0
+0x15029e087fed72
+0x665f90dd226e7
+0x1
+0x4742f519b9550
+0x1d4758f39d4d46
+0x19c5ebf347abd8
+0x0
+0x0
+0x29
+0x5fab4045fad9b
+0x8e15acef2d728
+0xf6cc9e2acddd3
+0x0
+0x174149d2a71590
+0x1a9d91f9cd4838
+0x1dd16bfcc61b3e
+0x47
+0x0
+0x20
+0xd2f89b4cab043
+0x1c59c147daeadf
+0x9122bbcc779dc
+0x13f9cae9573740
+0xf2
+0x0
+0x35
+0x6e5364b8daa36
+0x1ac92229c01686
+0xfcdca1789f827
+0x19a77388bec208
+0x0
+0x0
+0x2e
+0xd5477e18834e1
+0x5936217fbc7c9
+0x12fbdb899bdd91
+0x32fd

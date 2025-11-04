@@ -1,0 +1,50 @@
+# 2025/11/04 13:28:59.291306 [TestProperty_StartAndBossRooms] [rapid] draw seed: 0x0
+# 2025/11/04 13:28:59.291318 [TestProperty_StartAndBossRooms] [rapid] draw roomsMin: 50
+# 2025/11/04 13:28:59.291327 [TestProperty_StartAndBossRooms] [rapid] draw roomsMax: 86
+# 2025/11/04 13:28:59.291336 [TestProperty_StartAndBossRooms] [rapid] draw branchingAvg: 3
+# 2025/11/04 13:28:59.291343 [TestProperty_StartAndBossRooms] [rapid] draw branchingMax: 4
+# 2025/11/04 13:28:59.291351 [TestProperty_StartAndBossRooms] [rapid] draw pacingVariance: 0.28573310375213623
+# 2025/11/04 13:28:59.291359 [TestProperty_StartAndBossRooms] [rapid] draw secretDensity: 0.023870127321691432
+# 2025/11/04 13:28:59.291367 [TestProperty_StartAndBossRooms] [rapid] draw optionalRatio: 0.1
+# 2025/11/04 13:28:59.775477 [TestProperty_StartAndBossRooms] Generate() failed: hard constraints not satisfied: [Path length: 3 rooms (bounds: 5-172)]
+# 
+v0.4.8#6334420099148291329
+0x0
+0x0
+0x0
+0xe3e05a098777c
+0x28
+0x685cd783287f
+0x11be6a13e62e7b
+0x24
+0xb06a512e2a34e
+0xb8a382dad9f6c
+0x1a89511fca415
+0x1
+0x0
+0x0
+0x0
+0x1bda86cdaf0a8a
+0x1e93c6148a9c74
+0x2
+0x100c8e317e403e
+0x52efdf056866e
+0x44a3dae5e94a6
+0x0
+0x0
+0x13
+0x24973ef33fa8c
+0x2c2a1f881a6f7
+0x16a655d827ae26
+0xdc48d3f999391
+0x4
+0x0
+0x38
+0x8716920cac5f5
+0x6c54be965d8b9
+0x122e0d2db933a3
+0x1fe05742782494
+0xffffffffffffffff
+0x0
+0x0
+0x0

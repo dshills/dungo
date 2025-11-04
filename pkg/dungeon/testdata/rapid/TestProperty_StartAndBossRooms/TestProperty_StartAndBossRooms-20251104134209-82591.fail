@@ -1,0 +1,50 @@
+# 2025/11/04 13:42:09.647721 [TestProperty_StartAndBossRooms] [rapid] draw seed: 0x88
+# 2025/11/04 13:42:09.647724 [TestProperty_StartAndBossRooms] [rapid] draw roomsMin: 10
+# 2025/11/04 13:42:09.647725 [TestProperty_StartAndBossRooms] [rapid] draw roomsMax: 50
+# 2025/11/04 13:42:09.647726 [TestProperty_StartAndBossRooms] [rapid] draw branchingAvg: 3
+# 2025/11/04 13:42:09.647727 [TestProperty_StartAndBossRooms] [rapid] draw branchingMax: 5
+# 2025/11/04 13:42:09.647728 [TestProperty_StartAndBossRooms] [rapid] draw pacingVariance: 2.780587537998258e-08
+# 2025/11/04 13:42:09.647728 [TestProperty_StartAndBossRooms] [rapid] draw secretDensity: 8.271806125530277e-25
+# 2025/11/04 13:42:09.647729 [TestProperty_StartAndBossRooms] [rapid] draw optionalRatio: 0.12134154767488435
+# 2025/11/04 13:42:09.649307 [TestProperty_StartAndBossRooms] Validated: 1 Start room, 1 Boss room(s), path exists
+# 
+v0.4.8#14626389697658497175
+0x108284838e52b5
+0x88
+0xa4a51da917add
+0x2b341f430842
+0x0
+0x61aec90137c76
+0x6005d244b1a65
+0x0
+0x13026f65569fff
+0x111ec47ef30dfb
+0x1a7d022c2ad2c3
+0x1
+0x1
+0x0
+0x0
+0x1112b474158e32
+0x1a1da3f4510128
+0x3
+0x1c61668ec2099e
+0x135e43b0f6390f
+0xd44954ede7394
+0x18
+0x0
+0x19
+0xddb388a91fde8
+0x859bf4eefea04
+0x1ace40f8094bf0
+0x1dea64ba4c3d6e
+0x4e
+0x0
+0x1
+0x67c50e451aeae
+0xd50b42ba48cf8
+0x59f708e949532
+0x178a75b8913537
+0x2
+0x0
+0x3d
+0x576a3c14f456d
