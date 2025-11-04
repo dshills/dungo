@@ -1,0 +1,17 @@
+seed: 42
+size:
+  roomsMin: 15
+  roomsMax: 20
+branching:
+  avg: 2.0
+  max: 4
+pacing:
+  curve: LINEAR
+  variance: 0.1
+themes:
+  - crypt
+secretDensity: 0.15
+optionalRatio: 0.2
+keys:
+  - name: silver
+    count: 1

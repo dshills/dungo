@@ -43,6 +43,13 @@ bin/
 build/
 dist/
 *.a
+dungeongen
+dungeon_*.json
+dungeon_*.tmj
+dungeon_*.svg
+
+# Generated example outputs
+examples/*/output/
 
 # IDE and editor files
 .DS_Store

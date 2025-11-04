@@ -9,6 +9,15 @@ import (
 
 // ExportJSON serializes the complete artifact to JSON with indentation.
 // Returns formatted JSON with 2-space indentation for readability.
+//
+// The exported JSON contains all pipeline outputs: ADG, Layout, TileMap,
+// Content, Metrics, and optional Debug data. This format is suitable for:
+//   - Human inspection and debugging
+//   - Version control (readable diffs)
+//   - Custom processing pipelines
+//   - Archiving generated dungeons
+//
+// Use ExportJSONCompact() for storage or transmission where size matters.
 func ExportJSON(artifact *dungeon.Artifact) ([]byte, error) {
 	return json.MarshalIndent(artifact, "", "  ")
 }

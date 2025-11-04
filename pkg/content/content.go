@@ -18,6 +18,10 @@ import (
 //  4. Spawn enemies based on room.Difficulty values
 //  5. Respect capacity limits (e.g., max 10 enemies per room)
 //
+// The ContentPass uses room properties from the graph (Difficulty, Reward, Archetype)
+// to make placement decisions. Keys are placed to satisfy the key-before-lock
+// constraint automatically. Enemy spawns scale with difficulty progression.
+//
 // The pass uses the provided RNG to ensure deterministic placement
 // that is reproducible given the same seed.
 type ContentPass interface {

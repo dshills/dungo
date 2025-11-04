@@ -1,0 +1,20 @@
+seed: 12345
+size:
+  roomsMin: 30
+  roomsMax: 40
+branching:
+  avg: 2.2
+  max: 4
+pacing:
+  curve: S_CURVE
+  variance: 0.15
+themes:
+  - fungal
+  - crypt
+secretDensity: 0.2
+optionalRatio: 0.25
+keys:
+  - name: bronze
+    count: 1
+  - name: silver
+    count: 1

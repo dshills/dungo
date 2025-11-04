@@ -11,6 +11,17 @@ import (
 // It assigns 2D coordinates and dimensions to all rooms, and creates
 // corridor paths between connected rooms.
 //
+// Embedding is the SECOND stage in the dungeon generation pipeline.
+// It takes the abstract graph from synthesis and produces a 2D spatial layout
+// ready for tile carving. The embedder must handle:
+//   - Room placement (avoiding overlaps)
+//   - Corridor routing (respecting length/bend constraints)
+//   - Spatial optimization (compact, playable layouts)
+//
+// Available implementations:
+//   - "force_directed" (ForceDirectedEmbedder): Physics simulation, organic layouts
+//   - "orthogonal" (OrthogonalEmbedder): Grid-based, Manhattan corridors, roguelike style
+//
 // Embedders must be deterministic: given the same graph and RNG state,
 // they must produce identical layouts.
 type Embedder interface {

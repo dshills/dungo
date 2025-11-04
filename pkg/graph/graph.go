@@ -4,7 +4,16 @@ import (
 	"fmt"
 )
 
-// Graph represents the complete Abstract Dungeon Graph container.
+// Graph represents the complete Abstract Dungeon Graph (ADG).
+// The ADG is the first pipeline stage output: it defines dungeon topology without
+// spatial information. Rooms are nodes, Connectors are edges.
+//
+// The graph maintains several indices for efficient operations:
+//   - Rooms: map of room ID to Room
+//   - Connectors: map of connector ID to Connector
+//   - Adjacency: map of room ID to neighbor IDs (for pathfinding)
+//
+// All graph mutations (AddRoom, AddConnector) validate constraints and update indices.
 type Graph struct {
 	Rooms      map[string]*Room
 	Connectors map[string]*Connector

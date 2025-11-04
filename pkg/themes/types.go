@@ -13,6 +13,18 @@ import (
 
 // ThemePack represents a complete theme with encounter tables, loot tables,
 // tilesets, and decorators for dungeon generation.
+//
+// Themes provide the visual and gameplay flavor for dungeons. A ThemePack includes:
+//   - Tilesets: Graphics and tile mappings for rendering
+//   - EncounterTables: Enemy type distributions by difficulty
+//   - LootTables: Item drops by room type
+//   - Decorators: Environmental decoration rules
+//
+// Themes are loaded from YAML files and can be mixed/blended in a single dungeon.
+// The content placement stage queries themes to determine what enemies and items
+// to place based on room difficulty and archetype.
+//
+// Example themes: "dungeon", "crypt", "forest", "castle", "caves"
 type ThemePack struct {
 	Name            string           `yaml:"name" json:"name"`
 	Description     string           `yaml:"description" json:"description"`

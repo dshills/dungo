@@ -13,6 +13,20 @@ import (
 
 // Config specifies all dungeon generation parameters.
 // It supports YAML parsing and includes comprehensive validation.
+//
+// Config is the primary input to the dungeon generation pipeline.
+// All fields have strict validation ranges to ensure generation succeeds.
+// Use LoadConfig() to load from YAML files with automatic seed generation.
+//
+// Example:
+//
+//	cfg := &Config{
+//	  Seed: 42,
+//	  Size: SizeCfg{RoomsMin: 20, RoomsMax: 30},
+//	  Branching: BranchingCfg{Avg: 2.0, Max: 3},
+//	  Pacing: PacingCfg{Curve: PacingLinear, Variance: 0.1},
+//	  Themes: []string{"dungeon", "crypt"},
+//	}
 type Config struct {
 	// Seed is the master seed for deterministic generation.
 	// Use 0 to auto-generate from current time.

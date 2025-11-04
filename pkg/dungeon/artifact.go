@@ -20,6 +20,19 @@ type Capability = graph.Capability
 // Artifact is the complete output of dungeon generation.
 // It contains all pipeline outputs: graph structure, spatial layout,
 // rasterized tiles, gameplay content, metrics, and optional debug data.
+//
+// An Artifact represents a fully-generated, validated dungeon ready for use.
+// It can be serialized to JSON, exported to Tiled TMJ format, or processed
+// by game engines. All data is deterministic based on the input Config seed.
+//
+// Fields:
+//
+//	ADG - Abstract Dungeon Graph (room/connector topology)
+//	Layout - Spatial embedding (2D positions, corridors)
+//	TileMap - Rasterized tile grid (for rendering)
+//	Content - Gameplay elements (enemies, loot, puzzles)
+//	Metrics - Quality measurements (branching, path length, etc.)
+//	Debug - Optional validation reports and visualizations
 type Artifact struct {
 	ADG     *Graph
 	Layout  *Layout

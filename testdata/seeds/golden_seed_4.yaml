@@ -1,0 +1,15 @@
+seed: 777
+size:
+  roomsMin: 10
+  roomsMax: 15
+branching:
+  avg: 1.8
+  max: 3
+pacing:
+  curve: LINEAR
+  variance: 0.05
+themes:
+  - fungal
+secretDensity: 0.1
+optionalRatio: 0.15
+keys: []

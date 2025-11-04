@@ -261,23 +261,23 @@
 
 **Purpose**: Improvements that affect multiple user stories and final quality assurance
 
-- [ ] T134 [P] Add godoc comments to all exported types and functions
-- [ ] T135 [P] Implement TemplateSynthesizer as alternative strategy in pkg/synthesis/template.go
-- [ ] T136 [P] Implement OrthogonalEmbedder as alternative strategy in pkg/embedding/orthogonal.go
-- [ ] T137 [P] Add benchmark tests for graph synthesis in pkg/synthesis/synthesis_bench_test.go
-- [ ] T138 [P] Add benchmark tests for spatial embedding in pkg/embedding/embedding_bench_test.go
-- [ ] T139 [P] Add benchmark tests for full generation pipeline in pkg/dungeon/dungeon_bench_test.go
-- [ ] T140 Verify performance targets (<50ms graph+embedding, <200ms total) with benchmarks
-- [ ] T141 [P] Add memory profiling and verify <50MB target
-- [ ] T142 [P] Implement CLI tool in cmd/dungeongen/main.go for command-line generation
-- [ ] T143 [P] Add CLI flags for config file, output format, seed override in cmd/dungeongen/main.go
-- [ ] T144 Create example usage in cmd/dungeongen/README.md
-- [ ] T145 [P] Add fuzz tests for edge cases (0 rooms, 1000 rooms, conflicting constraints) in pkg/synthesis/fuzz_test.go
-- [ ] T146 [P] Implement simulated agent for secret findability testing in pkg/validation/agent.go
-- [ ] T147 Update CLAUDE.md with implementation-specific guidance
-- [ ] T148 Run final quality gates on all packages (golangci-lint run, go test ./...)
-- [ ] T149 Generate golden test snapshots for 5 fixed seeds (testdata/golden/)
-- [ ] T150 Run quickstart.md examples to verify documentation accuracy
+- [x] T134 [P] Add godoc comments to all exported types and functions
+- [x] T135 [P] Implement TemplateSynthesizer as alternative strategy in pkg/synthesis/template.go
+- [x] T136 [P] Implement OrthogonalEmbedder as alternative strategy in pkg/embedding/orthogonal.go
+- [x] T137 [P] Add benchmark tests for graph synthesis in pkg/synthesis/synthesis_bench_test.go
+- [x] T138 [P] Add benchmark tests for spatial embedding in pkg/embedding/embedding_bench_test.go
+- [x] T139 [P] Add benchmark tests for full generation pipeline in pkg/dungeon/dungeon_bench_test.go
+- [x] T140 Verify performance targets (<50ms graph+embedding, <200ms total) with benchmarks
+- [x] T141 [P] Add memory profiling and verify <50MB target
+- [x] T142 [P] Implement CLI tool in cmd/dungeongen/main.go for command-line generation
+- [x] T143 [P] Add CLI flags for config file, output format, seed override in cmd/dungeongen/main.go
+- [x] T144 Create example usage in cmd/dungeongen/README.md
+- [x] T145 [P] Add fuzz tests for edge cases (0 rooms, 1000 rooms, conflicting constraints) in pkg/synthesis/fuzz_test.go
+- [x] T146 [P] Implement simulated agent for secret findability testing in pkg/validation/agent.go
+- [x] T147 Update CLAUDE.md with implementation-specific guidance
+- [x] T148 Run final quality gates on all packages (golangci-lint run, go test ./...)
+- [x] T149 Generate golden test snapshots for 5 fixed seeds (testdata/golden/)
+- [x] T150 Run quickstart.md examples to verify documentation accuracy
 
 ---
 

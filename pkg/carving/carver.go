@@ -7,6 +7,17 @@ import (
 
 // Carver converts spatial layouts into rasterized tile maps.
 // It stamps room footprints, routes corridors, and places doors.
+//
+// Carving is the THIRD stage in the dungeon generation pipeline.
+// It takes the spatial layout from embedding and produces a tile-based map
+// suitable for rendering. The carver creates:
+//   - Tile layers (floor, walls, decorations)
+//   - Object layers (doors, spawn points, treasure)
+//   - Proper wall/floor boundaries
+//   - Corridor tiles connecting rooms
+//
+// The output TileMap can be exported to Tiled TMJ format or directly
+// consumed by game engines that support tile-based rendering.
 type Carver interface {
 	// Carve transforms a Layout into a TileMap with multiple layers.
 	// The graph is used to determine room sizes and connector types.

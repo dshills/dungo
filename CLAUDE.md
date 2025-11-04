@@ -314,5 +314,72 @@ The following are explicitly out of scope for v1:
 - Go 1.25.3 + Standard library (encoding/json, crypto/sha256), gopkg.in/yaml.v3 (config parsing), github.com/ajstarks/svgo (SVG generation), pgregory.net/rapid (property testing) (001-dungeon-generator-core)
 - File-based (config files: JSON/YAML, output artifacts: JSON/SVG/TMJ, golden test snapshots in testdata/) (001-dungeon-generator-core)
 
+## Implementation Lessons Learned
+
+### Coordinate System Management
+**Critical Insight**: Different pipeline stages use different coordinate systems. Careful conversion is essential.
+
+- **embedding.Layout**: Uses corner coordinates (X, Y = top-left) with Width/Height
+- **dungeon.Layout**: Uses center coordinates (X, Y = center point) for carving
+- **carving.Layout**: Also uses center coordinates for pose-based stamping
+
+**Best Practice**: Always normalize embedding layouts BEFORE converting to center coordinates. Call `normalizeEmbeddingLayout()` while you still have Width/Height info to handle room bounds correctly.
+
+### Corridor Length Scaling
+Corridor max length must scale with dungeon size to avoid embedding failures:
+- Small dungeons (5-25 rooms): ~50-100 units
+- Medium dungeons (25-100 rooms): ~100-200 units
+- Large dungeons (100-300 rooms): ~200-500 units
+
+Formula: `maxLength = sqrt(roomCount) * 20`, clamped to [100, 500]
+
+This matches the spatial scaling of force-directed layouts and prevents "no valid path" errors.
+
+### Validation Integration
+The validator must be set AFTER generator construction to avoid import cycles:
+```go
+validator := validation.NewValidator()
+gen := dungeon.NewGeneratorWithValidator(validator)
+```
+
+Alternative: Use `SetValidator()` method if constructing generator first.
+
+### Graph Synthesis Constraints
+When implementing grammar-based synthesis:
+- Always create exactly 1 Start and 1 Boss room
+- Ensure connectivity check before returning (BFS from Start)
+- Respect degree bounds both per-room and globally
+- Handle key-before-lock constraints during graph construction, not post-hoc
+- Use retry logic with seed perturbation if constraints fail
+
+### Testing Strategy That Worked
+1. **Unit tests**: Focus on individual functions, use table-driven tests
+2. **Property tests**: Use rapid for randomized testing with invariants
+3. **Integration tests**: Test full pipeline with fixed seeds
+4. **Golden tests**: Store SVG/JSON snapshots, diff on changes
+5. **Fuzz tests**: Stress edge cases (0 rooms, 1000 rooms, conflicting constraints)
+6. **Agent simulation**: Verify boss/key reachability with pathfinding
+
+### Export Format Compatibility
+- **JSON**: Straightforward serialization, good for debugging
+- **TMJ**: Requires careful adherence to Tiled spec (compression, layer IDs, chunk format)
+- **SVG**: Use viewBox for proper scaling, include legend for interpretability
+
+### Performance Gotchas
+- Force-directed embedding: Iterations matter more than you think (1000+ for large graphs)
+- Room spacing: Too tight (< 1.0) causes carving overlaps; too loose wastes space
+- Corridor pathfinding: A* is overkill; simple Manhattan distance works well
+- Theme table lookups: Cache compiled tables, don't parse YAML on every access
+
+### CLI Design Patterns
+- Always provide `-verbose` flag for debugging
+- Support `-seed` override for reproducibility during testing
+- Allow multiple export formats with `-format all`
+- Print statistics by default (room count, generation time, validation status)
+- Make `-config` required, provide helpful error messages
+
 ## Recent Changes
 - 001-dungeon-generator-core: Added Go 1.25.3 + Standard library (encoding/json, crypto/sha256), gopkg.in/yaml.v3 (config parsing), github.com/ajstarks/svgo (SVG generation), pgregory.net/rapid (property testing)
+- Implemented full pipeline: synthesis → embedding → carving → content → validation
+- Added CLI tool (cmd/dungeongen) with multi-format export support
+- Created fuzz tests for edge cases and agent-based pathfinding validation

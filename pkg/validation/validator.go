@@ -9,6 +9,27 @@ import (
 )
 
 // DefaultValidator implements the dungeon.Validator interface with comprehensive checks.
+//
+// Validation is the FIFTH and FINAL stage in the dungeon generation pipeline.
+// It verifies that the generated dungeon satisfies all hard constraints,
+// computes quality metrics, and checks soft constraints (optimization targets).
+//
+// Hard constraints (must pass):
+//   - Graph connectivity (all rooms reachable from Start)
+//   - Key reachability (keys obtainable before locks)
+//   - No spatial overlaps (rooms don't collide)
+//   - Path bounds (Start→Boss path within limits)
+//
+// Soft constraints (should optimize):
+//   - Pacing deviation (difficulty curve adherence)
+//   - Branching factor (connectivity targets)
+//
+// Metrics computed:
+//   - BranchingFactor: average connections per room
+//   - PathLength: Start→Boss critical path length
+//   - CycleCount: number of graph cycles (loops)
+//   - PacingDeviation: L2 distance from target curve
+//   - SecretFindability: heuristic discoverability score
 type DefaultValidator struct {
 	// Configuration options could be added here in the future
 }

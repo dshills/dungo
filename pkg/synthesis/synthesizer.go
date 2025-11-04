@@ -38,7 +38,16 @@ type KeyConfig struct {
 }
 
 // GraphSynthesizer is the interface for all graph synthesis strategies.
-// Implementations must be deterministic: same RNG+Config → identical Graph.
+// Implementations must be deterministic: same RNG+Config produces identical Graph.
+//
+// Graph synthesis is the FIRST stage in the dungeon generation pipeline.
+// It creates the Abstract Dungeon Graph (ADG) - a purely topological representation
+// with no spatial information. The ADG defines room types, connections, difficulty
+// progression, and key-lock puzzles.
+//
+// Available implementations:
+//   - "grammar" (GrammarSynthesizer): Production rule-based, flexible, hub-and-spoke
+//   - "template" (TemplateSynthesizer): Template-stitching, predictable, architectural
 //
 // Contract:
 // - Must use provided RNG for all randomness

@@ -90,7 +90,15 @@ type Capability struct {
 	Value string `json:"value"` // What's provided
 }
 
-// Room represents a node in the Abstract Dungeon Graph.
+// Room represents a node in the Abstract Dungeon Graph (ADG).
+// Rooms are abstract entities with gameplay properties but no spatial information.
+// Spatial positions are assigned during the embedding phase.
+//
+// Each room has an archetype (Start, Boss, Treasure, etc.) that guides content
+// placement and difficulty assignment. The Size field suggests physical dimensions
+// but doesn't enforce them until carving.
+//
+// Requirements/Provides model key-and-lock puzzle dependencies.
 type Room struct {
 	ID           string            `json:"id"`
 	Archetype    RoomArchetype     `json:"archetype"`

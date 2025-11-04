@@ -12,8 +12,16 @@ import (
 	"github.com/dshills/dungo/pkg/synthesis"
 )
 
-// Generator is the main entry point for dungeon generation.
-// Implementations must be deterministic: same Config+seed → identical Artifact.
+// Generator is the main entry point for procedural dungeon generation.
+// Implementations must be deterministic: same Config+seed produces identical Artifact.
+// This ensures reproducibility for seeded generation, testing, and debugging.
+//
+// All generators orchestrate a multi-stage pipeline:
+//  1. Graph synthesis - creates abstract room/connector graph
+//  2. Spatial embedding - assigns 2D positions and layouts
+//  3. Tile carving - rasterizes rooms and corridors to tile grid
+//  4. Content population - places enemies, loot, puzzles
+//  5. Validation - checks constraints and computes metrics
 type Generator interface {
 	// Generate creates a complete dungeon from configuration.
 	// Returns error if hard constraints cannot be satisfied after retry limit.
@@ -24,6 +32,11 @@ type Generator interface {
 	// - Must enforce all hard constraints or fail
 	// - Must produce ValidationReport as part of Artifact
 	// - Context cancellation stops generation and returns partial Artifact
+	//
+	// Example:
+	//   gen := dungeon.NewGenerator()
+	//   cfg := &dungeon.Config{Seed: 12345, Size: dungeon.SizeCfg{RoomsMin: 20, RoomsMax: 30}}
+	//   artifact, err := gen.Generate(ctx, cfg)
 	Generate(ctx context.Context, cfg *Config) (*Artifact, error)
 }
 

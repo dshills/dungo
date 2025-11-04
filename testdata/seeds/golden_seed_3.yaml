@@ -1,0 +1,21 @@
+seed: 99999
+size:
+  roomsMin: 50
+  roomsMax: 70
+branching:
+  avg: 2.5
+  max: 5
+pacing:
+  curve: EXPONENTIAL
+  variance: 0.2
+themes:
+  - arcane
+secretDensity: 0.25
+optionalRatio: 0.3
+keys:
+  - name: bronze
+    count: 1
+  - name: silver
+    count: 1
+  - name: gold
+    count: 1

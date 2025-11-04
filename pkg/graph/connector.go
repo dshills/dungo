@@ -63,7 +63,15 @@ type Gate struct {
 	Value string `json:"value"` // Specific gate (e.g., "silver_key", "runes_3")
 }
 
-// Connector represents an edge in the Abstract Dungeon Graph.
+// Connector represents an edge in the Abstract Dungeon Graph (ADG).
+// Connectors link rooms and define traversal properties: type (door, corridor, teleporter),
+// gating (keys/abilities required), and visibility (normal, secret, illusory).
+//
+// The Type field determines how the connector is rendered during carving.
+// Gates model progression locks: a Gate{Type: "key", Value: "silver_key"} requires
+// the player to have obtained the silver key from another room.
+//
+// Bidirectional controls whether the connection is two-way or one-way only.
 type Connector struct {
 	ID            string         `json:"id"`
 	From          string         `json:"from"` // Room ID
