@@ -142,16 +142,34 @@ func TestProperty_CustomPacingCurve(t *testing.T) {
 		customPoints := make([][2]float64, numPoints)
 
 		// First point must be at progress=0.0
-		customPoints[0] = [2]float64{0.0, rapid.Float64Range(0.0, 0.3).Draw(rt, "startDiff")}
+		startDiff := rapid.Float64Range(0.0, 0.3).Draw(rt, "startDiff")
+		customPoints[0] = [2]float64{0.0, startDiff}
 
 		// Last point must be at progress=1.0
-		customPoints[numPoints-1] = [2]float64{1.0, rapid.Float64Range(0.7, 1.0).Draw(rt, "endDiff")}
+		endDiff := rapid.Float64Range(0.7, 1.0).Draw(rt, "endDiff")
+		customPoints[numPoints-1] = [2]float64{1.0, endDiff}
 
 		// Intermediate points at increasing progress values
+		// Divide the [0,1] progress range into segments
 		for i := 1; i < numPoints-1; i++ {
+			// Calculate bounds for this intermediate point
 			prevProgress := customPoints[i-1][0]
-			nextProgress := 1.0
-			progress := rapid.Float64Range(prevProgress+0.1, nextProgress-0.1).Draw(rt, fmt.Sprintf("prog_%d", i))
+			// For intermediate point i, ensure there's room for remaining points
+			remainingPoints := (numPoints - 1) - i
+			// Each remaining point needs at least 0.05 space, plus keep away from 1.0
+			maxProgress := 1.0 - float64(remainingPoints+1)*0.05
+
+			// Ensure valid range by constraining progress properly
+			minProg := prevProgress + 0.05
+			if minProg >= maxProgress {
+				// Not enough space, skip this test case
+				rt.Skip("cannot generate valid progress points")
+				return
+			}
+
+			progress := rapid.Float64Range(minProg, maxProgress).Draw(rt, fmt.Sprintf("prog_%d", i))
+
+			// Difficulty can be anywhere in [0,1] - interpolation will handle it
 			difficulty := rapid.Float64Range(0.0, 1.0).Draw(rt, fmt.Sprintf("diff_%d", i))
 			customPoints[i] = [2]float64{progress, difficulty}
 		}

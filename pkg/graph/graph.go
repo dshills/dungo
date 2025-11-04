@@ -193,6 +193,9 @@ func (g *Graph) GetPath(from, to string) ([]string, error) {
 
 // IsConnected checks if the graph is a single connected component.
 // Returns true if all rooms are reachable from any starting room.
+// NOTE: This checks STRONG connectivity (respects edge direction).
+// For dungeons with one-way doors, this may return false even if
+// the graph is weakly connected.
 func (g *Graph) IsConnected() bool {
 	if len(g.Rooms) == 0 {
 		return true
@@ -210,6 +213,53 @@ func (g *Graph) IsConnected() bool {
 
 	// Check if all rooms are reachable
 	return len(reachable) == len(g.Rooms)
+}
+
+// IsWeaklyConnected checks if the graph is weakly connected.
+// Returns true if all rooms are reachable when treating all edges as bidirectional.
+// This is more appropriate for dungeons with one-way passages.
+func (g *Graph) IsWeaklyConnected() bool {
+	if len(g.Rooms) == 0 {
+		return true
+	}
+
+	// Pick any room as starting point
+	var startID string
+	for id := range g.Rooms {
+		startID = id
+		break
+	}
+
+	// Build undirected adjacency (treat all edges as bidirectional)
+	undirectedAdj := make(map[string][]string)
+	for from, neighbors := range g.Adjacency {
+		for _, to := range neighbors {
+			// Add forward edge
+			undirectedAdj[from] = append(undirectedAdj[from], to)
+			// Add reverse edge
+			undirectedAdj[to] = append(undirectedAdj[to], from)
+		}
+	}
+
+	// BFS with undirected graph
+	visited := make(map[string]bool)
+	queue := []string{startID}
+	visited[startID] = true
+
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+
+		for _, neighbor := range undirectedAdj[current] {
+			if !visited[neighbor] {
+				visited[neighbor] = true
+				queue = append(queue, neighbor)
+			}
+		}
+	}
+
+	// Check if all rooms were visited
+	return len(visited) == len(g.Rooms)
 }
 
 // GetReachable returns all rooms reachable from the given room using BFS.

@@ -63,6 +63,11 @@ func spawnEnemies(g *graph.Graph, content *Content, maxEnemiesPerRoom int, rng *
 			enemyCount = maxEnemiesPerRoom
 		}
 
+		// Skip rooms with no enemies - don't create invalid spawns
+		if enemyCount == 0 {
+			continue
+		}
+
 		// Select enemy type based on difficulty
 		enemyType := selectEnemyType(room.Difficulty, rng)
 

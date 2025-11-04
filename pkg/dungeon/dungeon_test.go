@@ -2,9 +2,11 @@ package dungeon_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/dshills/dungo/pkg/dungeon"
+	"github.com/dshills/dungo/pkg/graph"
 	"github.com/dshills/dungo/pkg/validation"
 )
 
@@ -332,18 +334,18 @@ func marshalArtifact(a *dungeon.Artifact) ([]byte, error) {
 // uniform difficulty distribution in generated dungeons.
 // TDD RED PHASE: Will FAIL until pacing implementation is complete.
 func TestGolden_LinearPacingCurve(t *testing.T) {
-	cfg := &Config{
+	cfg := &dungeon.Config{
 		Seed: 1000,
-		Size: SizeCfg{
+		Size: dungeon.SizeCfg{
 			RoomsMin: 25,
 			RoomsMax: 25,
 		},
-		Branching: BranchingCfg{
+		Branching: dungeon.BranchingCfg{
 			Avg: 2.0,
 			Max: 4,
 		},
-		Pacing: PacingCfg{
-			Curve:    PacingLinear,
+		Pacing: dungeon.PacingCfg{
+			Curve:    dungeon.PacingLinear,
 			Variance: 0.1,
 		},
 		Themes:        []string{"dungeon"},
@@ -351,7 +353,7 @@ func TestGolden_LinearPacingCurve(t *testing.T) {
 		OptionalRatio: 0.2,
 	}
 
-	gen := NewGenerator()
+	gen := dungeon.NewGenerator()
 	artifact, err := gen.Generate(context.Background(), cfg)
 
 	if err != nil {
@@ -365,10 +367,10 @@ func TestGolden_LinearPacingCurve(t *testing.T) {
 	// Find critical path (Start -> Boss)
 	var startID, bossID string
 	for id, room := range artifact.ADG.Rooms {
-		if room.Archetype == ArchetypeStart {
+		if room.Archetype == graph.ArchetypeStart {
 			startID = id
 		}
-		if room.Archetype == ArchetypeBoss {
+		if room.Archetype == graph.ArchetypeBoss {
 			bossID = id
 		}
 	}
@@ -410,18 +412,18 @@ func TestGolden_LinearPacingCurve(t *testing.T) {
 // smooth acceleration and deceleration.
 // TDD RED PHASE: Will FAIL until pacing implementation is complete.
 func TestGolden_SCurvePacingCurve(t *testing.T) {
-	cfg := &Config{
+	cfg := &dungeon.Config{
 		Seed: 2000,
-		Size: SizeCfg{
+		Size: dungeon.SizeCfg{
 			RoomsMin: 30,
 			RoomsMax: 30,
 		},
-		Branching: BranchingCfg{
+		Branching: dungeon.BranchingCfg{
 			Avg: 2.0,
 			Max: 4,
 		},
-		Pacing: PacingCfg{
-			Curve:    PacingSCurve,
+		Pacing: dungeon.PacingCfg{
+			Curve:    dungeon.PacingSCurve,
 			Variance: 0.1,
 		},
 		Themes:        []string{"crypt"},
@@ -429,7 +431,7 @@ func TestGolden_SCurvePacingCurve(t *testing.T) {
 		OptionalRatio: 0.2,
 	}
 
-	gen := NewGenerator()
+	gen := dungeon.NewGenerator()
 	artifact, err := gen.Generate(context.Background(), cfg)
 
 	if err != nil {
@@ -443,10 +445,10 @@ func TestGolden_SCurvePacingCurve(t *testing.T) {
 	// Find critical path
 	var startID, bossID string
 	for id, room := range artifact.ADG.Rooms {
-		if room.Archetype == ArchetypeStart {
+		if room.Archetype == graph.ArchetypeStart {
 			startID = id
 		}
-		if room.Archetype == ArchetypeBoss {
+		if room.Archetype == graph.ArchetypeBoss {
 			bossID = id
 		}
 	}
@@ -487,18 +489,18 @@ func TestGolden_SCurvePacingCurve(t *testing.T) {
 // rapid difficulty increase toward the end.
 // TDD RED PHASE: Will FAIL until pacing implementation is complete.
 func TestGolden_ExponentialPacingCurve(t *testing.T) {
-	cfg := &Config{
+	cfg := &dungeon.Config{
 		Seed: 3000,
-		Size: SizeCfg{
+		Size: dungeon.SizeCfg{
 			RoomsMin: 25,
 			RoomsMax: 25,
 		},
-		Branching: BranchingCfg{
+		Branching: dungeon.BranchingCfg{
 			Avg: 2.0,
 			Max: 4,
 		},
-		Pacing: PacingCfg{
-			Curve:    PacingExponential,
+		Pacing: dungeon.PacingCfg{
+			Curve:    dungeon.PacingExponential,
 			Variance: 0.1,
 		},
 		Themes:        []string{"cave"},
@@ -506,7 +508,7 @@ func TestGolden_ExponentialPacingCurve(t *testing.T) {
 		OptionalRatio: 0.2,
 	}
 
-	gen := NewGenerator()
+	gen := dungeon.NewGenerator()
 	artifact, err := gen.Generate(context.Background(), cfg)
 
 	if err != nil {
@@ -520,10 +522,10 @@ func TestGolden_ExponentialPacingCurve(t *testing.T) {
 	// Find critical path
 	var startID, bossID string
 	for id, room := range artifact.ADG.Rooms {
-		if room.Archetype == ArchetypeStart {
+		if room.Archetype == graph.ArchetypeStart {
 			startID = id
 		}
-		if room.Archetype == ArchetypeBoss {
+		if room.Archetype == graph.ArchetypeBoss {
 			bossID = id
 		}
 	}
@@ -564,13 +566,13 @@ func TestGolden_ExponentialPacingCurve(t *testing.T) {
 // produce measurably different difficulty distributions.
 // TDD RED PHASE: Will FAIL until pacing implementation is complete.
 func TestGolden_PacingCurveComparison(t *testing.T) {
-	baseCfg := Config{
+	baseCfg := dungeon.Config{
 		Seed: 4000,
-		Size: SizeCfg{
+		Size: dungeon.SizeCfg{
 			RoomsMin: 30,
 			RoomsMax: 30,
 		},
-		Branching: BranchingCfg{
+		Branching: dungeon.BranchingCfg{
 			Avg: 2.0,
 			Max: 4,
 		},
@@ -581,20 +583,20 @@ func TestGolden_PacingCurveComparison(t *testing.T) {
 
 	curves := []struct {
 		name  string
-		curve PacingCurve
+		curve dungeon.PacingCurve
 	}{
-		{"LINEAR", PacingLinear},
-		{"S_CURVE", PacingSCurve},
-		{"EXPONENTIAL", PacingExponential},
+		{"LINEAR", dungeon.PacingLinear},
+		{"S_CURVE", dungeon.PacingSCurve},
+		{"EXPONENTIAL", dungeon.PacingExponential},
 	}
 
 	distributions := make(map[string][]float64)
 
-	gen := NewGenerator()
+	gen := dungeon.NewGenerator()
 
 	for _, tc := range curves {
 		cfg := baseCfg
-		cfg.Pacing = PacingCfg{
+		cfg.Pacing = dungeon.PacingCfg{
 			Curve:    tc.curve,
 			Variance: 0.1,
 		}
@@ -611,10 +613,10 @@ func TestGolden_PacingCurveComparison(t *testing.T) {
 		// Extract difficulty distribution
 		var startID, bossID string
 		for id, room := range artifact.ADG.Rooms {
-			if room.Archetype == ArchetypeStart {
+			if room.Archetype == graph.ArchetypeStart {
 				startID = id
 			}
-			if room.Archetype == ArchetypeBoss {
+			if room.Archetype == graph.ArchetypeBoss {
 				bossID = id
 			}
 		}
@@ -658,7 +660,7 @@ func TestGolden_PacingCurveComparison(t *testing.T) {
 // =============================================================================
 
 // extractDifficultyDistribution extracts difficulty values along a path.
-func extractDifficultyDistribution(g *Graph, path []string) []float64 {
+func extractDifficultyDistribution(g *dungeon.Graph, path []string) []float64 {
 	difficulties := make([]float64, len(path))
 	for i, roomID := range path {
 		difficulties[i] = g.Rooms[roomID].Difficulty
