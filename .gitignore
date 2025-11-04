@@ -27,6 +27,17 @@ go.work.sum
 **/testdata/rapid/
 *.fail
 
+# Test output and coverage files
+test-output.log
+coverage.out
+coverage.html
+*.coverprofile
+
+# Backup and temporary files
+*.bak
+*.bak[0-9]
+*.tmp
+
 # Build artifacts
 bin/
 build/
