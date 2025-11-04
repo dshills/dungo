@@ -29,6 +29,20 @@ issues:
       text: "cyclomatic complexity"
       linters:
         - gocyclo
+    # Rendering functions naturally have high complexity (conditional formatting)
+    - path: pkg/dungeon/text.go
+      text: "cyclomatic complexity"
+      linters:
+        - gocyclo
+    # TMJ export has complex format handling
+    - path: pkg/export/tmj.go
+      text: "cyclomatic complexity"
+      linters:
+        - gocyclo
+    # Test files may skip error checking for brevity
+    - path: _test\.go
+      linters:
+        - errcheck
     # Test files can have higher complexity for comprehensive test cases
     - path: _test\.go
       text: "cyclomatic complexity"

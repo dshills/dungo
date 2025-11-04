@@ -11,7 +11,7 @@ import (
 )
 
 func TestNewGenerator(t *testing.T) {
-	gen := dungeon.NewGenerator()
+	gen := dungeon.NewGeneratorWithValidator(validation.NewValidator())
 	if gen == nil {
 		t.Fatal("NewGenerator() returned nil")
 	}
@@ -64,15 +64,18 @@ func TestGenerateStub(t *testing.T) {
 		t.Error("Expected ADG to be populated")
 	}
 
-	// Other stages are not yet implemented
-	if artifact.Layout != nil {
-		t.Error("Expected Layout to be nil (not yet implemented)")
+	// All pipeline stages should now be implemented
+	if artifact.Layout == nil {
+		t.Error("Expected Layout to be populated (embedding stage)")
 	}
-	if artifact.TileMap != nil {
-		t.Error("Expected TileMap to be nil (not yet implemented)")
+	if artifact.TileMap == nil {
+		t.Error("Expected TileMap to be populated (carving stage)")
 	}
-	if artifact.Content != nil {
-		t.Error("Expected Content to be nil (not yet implemented)")
+	if artifact.Content == nil {
+		t.Error("Expected Content to be populated (content stage)")
+	}
+	if artifact.Metrics == nil {
+		t.Error("Expected Metrics to be populated (validation stage)")
 	}
 }
 
@@ -353,7 +356,7 @@ func TestGolden_LinearPacingCurve(t *testing.T) {
 		OptionalRatio: 0.2,
 	}
 
-	gen := dungeon.NewGenerator()
+	gen := dungeon.NewGeneratorWithValidator(validation.NewValidator())
 	artifact, err := gen.Generate(context.Background(), cfg)
 
 	if err != nil {
@@ -431,7 +434,7 @@ func TestGolden_SCurvePacingCurve(t *testing.T) {
 		OptionalRatio: 0.2,
 	}
 
-	gen := dungeon.NewGenerator()
+	gen := dungeon.NewGeneratorWithValidator(validation.NewValidator())
 	artifact, err := gen.Generate(context.Background(), cfg)
 
 	if err != nil {
@@ -508,7 +511,7 @@ func TestGolden_ExponentialPacingCurve(t *testing.T) {
 		OptionalRatio: 0.2,
 	}
 
-	gen := dungeon.NewGenerator()
+	gen := dungeon.NewGeneratorWithValidator(validation.NewValidator())
 	artifact, err := gen.Generate(context.Background(), cfg)
 
 	if err != nil {
@@ -592,7 +595,7 @@ func TestGolden_PacingCurveComparison(t *testing.T) {
 
 	distributions := make(map[string][]float64)
 
-	gen := dungeon.NewGenerator()
+	gen := dungeon.NewGeneratorWithValidator(validation.NewValidator())
 
 	for _, tc := range curves {
 		cfg := baseCfg

@@ -3,6 +3,7 @@ package dungeon
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/dshills/dungo/pkg/carving"
 	"github.com/dshills/dungo/pkg/content"
@@ -43,37 +44,31 @@ type Validator interface {
 // 4. Content population (enemies, loot, puzzles)
 // 5. Validation (metrics and constraint checking)
 type DefaultGenerator struct {
-	synthesizer synthesis.GraphSynthesizer
-	embedder    embedding.Embedder
-	carver      carving.Carver
-	contentPass content.ContentPass
-	validator   Validator
+	synthesizer     synthesis.GraphSynthesizer
+	embeddingConfig *embedding.Config // Base config, will be adjusted per dungeon
+	carver          carving.Carver
+	contentPass     content.ContentPass
+	validator       Validator
 }
 
 // NewGenerator creates a new dungeon generator with default implementations.
 // Note: You must call SetValidator() after creation to set the validator,
 // or use NewGeneratorWithValidator() directly with a validator instance.
 func NewGenerator() Generator {
-	// Create more lenient embedding config for dungeons
+	// Create base embedding config that will be adjusted per dungeon size
+	// These are base values optimized for general use
 	embeddingCfg := embedding.DefaultConfig()
-	embeddingCfg.CorridorMaxLength = 100.0 // Increase from 50 to 100
-	embeddingCfg.MinRoomSpacing = 1.0      // Decrease from 2.0 to 1.0
-	embeddingCfg.CorridorMaxBends = 6      // Increase from 4 to 6
-	embeddingCfg.MaxIterations = 1000      // Increase for better convergence
-
-	// Get embedder with adjusted config
-	embedderInst, err := embedding.Get("force_directed", embeddingCfg)
-	if err != nil {
-		// Fallback to basic embedder if force-directed not available
-		panic(fmt.Sprintf("failed to initialize embedder: %v", err))
-	}
+	embeddingCfg.MinRoomSpacing = 1.0      // Decrease from 2.0 to 1.0 for tighter layouts
+	embeddingCfg.CorridorMaxBends = 6      // Increase from 4 to 6 for more routing flexibility
+	embeddingCfg.MaxIterations = 1000      // Increase for better convergence on large graphs
+	embeddingCfg.CorridorMaxLength = 100.0 // Base value, will be scaled per dungeon
 
 	return &DefaultGenerator{
-		synthesizer: synthesis.Get("grammar"),
-		embedder:    embedderInst,
-		carver:      carving.NewDefaultCarver(16, 16), // 16x16 pixel tiles
-		contentPass: content.NewDefaultContentPass(),
-		validator:   nil, // Must be set via SetValidator or use NewGeneratorWithValidator
+		synthesizer:     synthesis.Get("grammar"),
+		embeddingConfig: embeddingCfg,
+		carver:          carving.NewDefaultCarver(16, 16), // 16x16 pixel tiles
+		contentPass:     content.NewDefaultContentPass(),
+		validator:       nil, // Must be set via SetValidator or use NewGeneratorWithValidator
 	}
 }
 
@@ -156,7 +151,16 @@ func (g *DefaultGenerator) Generate(ctx context.Context, cfg *Config) (*Artifact
 	}
 
 	// Stage B: Spatial Embedding
-	layoutInternal, err := g.embedder.Embed(adgInternal, embeddingRNG)
+	// Create embedder with corridor max length scaled to dungeon size
+	embedderCfg := *g.embeddingConfig // Copy base config
+	embedderCfg.CorridorMaxLength = calculateCorridorMaxLength(len(adgInternal.Rooms))
+
+	embedder, err := embedding.Get("force_directed", &embedderCfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create embedder: %w", err)
+	}
+
+	layoutInternal, err := embedder.Embed(adgInternal, embeddingRNG)
 	if err != nil {
 		return nil, fmt.Errorf("embedding failed: %w", err)
 	}
@@ -536,6 +540,33 @@ func normalizeEmbeddingLayout(layout *embedding.Layout) {
 		layout.Bounds.MaxX += offsetX
 		layout.Bounds.MaxY += offsetY
 	}
+}
+
+// calculateCorridorMaxLength computes an appropriate corridor max length based on dungeon size.
+// The formula scales with the expected spatial extent of the dungeon:
+//   - For N rooms, force-directed layout with InitialSpread=100 creates a layout
+//     roughly proportional to sqrt(N) in each dimension
+//   - Use sqrt(N) * 20 to scale corridor length with dungeon spatial extent
+//   - This gives ~50 for 5 rooms, ~100 for 25 rooms, ~200 for 100 rooms, ~292 for 214 rooms
+//   - Minimum of 100 for small dungeons, maximum of 500 for very large dungeons
+func calculateCorridorMaxLength(roomCount int) float64 {
+	if roomCount <= 0 {
+		return 100.0
+	}
+
+	// Scale with square root: max_length = sqrt(N) * 20
+	// This matches the spatial scaling of force-directed layouts
+	maxLength := math.Sqrt(float64(roomCount)) * 20.0
+
+	// Apply bounds: min 100, max 500
+	if maxLength < 100.0 {
+		maxLength = 100.0
+	}
+	if maxLength > 500.0 {
+		maxLength = 500.0
+	}
+
+	return maxLength
 }
 
 // normalizeLayout translates all positions to ensure they are non-negative.
