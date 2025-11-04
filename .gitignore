@@ -23,6 +23,10 @@ vendor/
 go.work
 go.work.sum
 
+# Rapid property test artifacts (transient)
+**/testdata/rapid/
+*.fail
+
 # Build artifacts
 bin/
 build/
