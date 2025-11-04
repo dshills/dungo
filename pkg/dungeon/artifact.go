@@ -1,6 +1,15 @@
 package dungeon
 
-import "github.com/dshills/dungo/pkg/graph"
+import (
+	"encoding/json"
+	"errors"
+	"os"
+
+	"github.com/dshills/dungo/pkg/graph"
+)
+
+// ErrNotImplemented is returned by export methods that are not yet implemented.
+var ErrNotImplemented = errors.New("functionality not yet implemented")
 
 // Requirement is an alias for graph.Requirement for convenience.
 type Requirement = graph.Requirement
@@ -168,4 +177,103 @@ type ConstraintResult struct {
 	Satisfied  bool        // Pass/fail
 	Score      float64     // For soft constraints (0.0-1.0, higher is better)
 	Details    string      // Explanation or violation info
+}
+
+// ExportJSON serializes the artifact to JSON with indentation.
+// Returns formatted JSON with 2-space indentation for readability.
+// This is a convenience method for export functionality.
+func (a *Artifact) ExportJSON() ([]byte, error) {
+	return json.MarshalIndent(a, "", "  ")
+}
+
+// ExportJSONCompact serializes the artifact to JSON without indentation.
+// Returns compact JSON suitable for storage or transmission.
+func (a *Artifact) ExportJSONCompact() ([]byte, error) {
+	return json.Marshal(a)
+}
+
+// SaveJSON exports the artifact to a JSON file with indentation.
+// The file is created with 0644 permissions (readable by all, writable by owner).
+func (a *Artifact) SaveJSON(path string) error {
+	data, err := a.ExportJSON()
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0644)
+}
+
+// SaveJSONCompact exports the artifact to a compact JSON file.
+// The file is created with 0644 permissions (readable by all, writable by owner).
+func (a *Artifact) SaveJSONCompact(path string) error {
+	data, err := a.ExportJSONCompact()
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0644)
+}
+
+// ExportTMJ exports the artifact to Tiled TMJ (JSON map) format.
+// Note: TMJ export functionality is not yet implemented.
+// This method is a placeholder for future TMJ export support.
+func (a *Artifact) ExportTMJ() ([]byte, error) {
+	// TODO: Implement TMJ export in pkg/export/tmj.go (tasks T100-T104)
+	return nil, ErrNotImplemented
+}
+
+// SaveTMJ exports the artifact to a TMJ file.
+// Note: TMJ export functionality is not yet implemented.
+// This method is a placeholder for future TMJ export support.
+func (a *Artifact) SaveTMJ(path string) error {
+	// TODO: Implement TMJ export in pkg/export/tmj.go (tasks T100-T104)
+	return ErrNotImplemented
+}
+
+// SVGOptions contains configuration for SVG export.
+type SVGOptions struct {
+	Width           int     // SVG width in pixels
+	Height          int     // SVG height in pixels
+	ShowDifficulty  bool    // Show difficulty heatmap
+	ShowArchetypes  bool    // Color-code by room archetype
+	ShowConnections bool    // Draw edges between rooms
+	ShowLegend      bool    // Include legend
+	Scale           float64 // Coordinate scale factor
+	NodeRadius      float64 // Room node radius
+	StrokeWidth     float64 // Line stroke width
+	BackgroundColor string  // Background color (hex)
+	ShowRoomLabels  bool    // Show room IDs/names
+	ShowMetrics     bool    // Include metrics annotation
+}
+
+// DefaultSVGOptions returns default SVG export options.
+func DefaultSVGOptions() SVGOptions {
+	return SVGOptions{
+		Width:           1024,
+		Height:          768,
+		ShowDifficulty:  true,
+		ShowArchetypes:  true,
+		ShowConnections: true,
+		ShowLegend:      true,
+		Scale:           1.0,
+		NodeRadius:      10.0,
+		StrokeWidth:     2.0,
+		BackgroundColor: "#1a1a2e",
+		ShowRoomLabels:  true,
+		ShowMetrics:     true,
+	}
+}
+
+// ExportSVG exports the artifact graph as an SVG visualization.
+// Note: SVG export functionality is not yet implemented.
+// This method is a placeholder for future SVG export support.
+func (a *Artifact) ExportSVG(opts SVGOptions) ([]byte, error) {
+	// TODO: Implement SVG export in pkg/export/svg.go (tasks T105-T109)
+	return nil, ErrNotImplemented
+}
+
+// SaveSVG exports the artifact graph as an SVG file.
+// Note: SVG export functionality is not yet implemented.
+// This method is a placeholder for future SVG export support.
+func (a *Artifact) SaveSVG(path string, opts SVGOptions) error {
+	// TODO: Implement SVG export in pkg/export/svg.go (tasks T105-T109)
+	return ErrNotImplemented
 }

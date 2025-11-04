@@ -192,30 +192,30 @@
 
 ### Tests for User Story 3 (MANDATORY - TDD) ⚠️
 
-- [ ] T093 [P] [US3] Unit test for JSON serialization round-trip in pkg/dungeon/export_test.go
-- [ ] T094 [P] [US3] Unit test for TMJ export structure validation in pkg/export/tmj_test.go
-- [ ] T095 [P] [US3] Unit test for SVG generation with all elements in pkg/export/svg_test.go
-- [ ] T096 [US3] Integration test for Tiled editor compatibility in pkg/export/tmj_test.go
-- [ ] T097 [US3] Golden test for SVG visualization consistency in pkg/export/svg_test.go
+- [x] T093 [P] [US3] Unit test for JSON serialization round-trip in pkg/dungeon/export_test.go
+- [x] T094 [P] [US3] Unit test for TMJ export structure validation in pkg/export/tmj_test.go
+- [x] T095 [P] [US3] Unit test for SVG generation with all elements in pkg/export/svg_test.go
+- [x] T096 [US3] Integration test for Tiled editor compatibility in pkg/export/tmj_test.go
+- [x] T097 [US3] Golden test for SVG visualization consistency in pkg/export/svg_test.go
 
 ### Implementation for User Story 3
 
-- [ ] T098 [P] Create pkg/export package for export functionality
-- [ ] T099 [P] [US3] Implement JSON export for complete Artifact in pkg/export/json.go
-- [ ] T100 [P] [US3] Implement TMJ map builder with layer support in pkg/export/tmj.go
-- [ ] T101 [US3] Implement TMJ tile layer export (floor, walls, doors) in pkg/export/tmj.go
-- [ ] T102 [US3] Implement TMJ object layer export (entities, triggers) in pkg/export/tmj.go
-- [ ] T103 [US3] Add TMJ tileset reference generation in pkg/export/tmj.go
-- [ ] T104 [US3] Add TMJ compression support (gzip) in pkg/export/tmj.go
-- [ ] T105 [P] [US3] Implement SVG exporter using github.com/ajstarks/svgo in pkg/export/svg.go
-- [ ] T106 [US3] Add node-edge graph visualization to SVG in pkg/export/svg.go
-- [ ] T107 [US3] Add color-coding by room archetype in SVG in pkg/export/svg.go
-- [ ] T108 [US3] Add difficulty heatmap overlay to SVG in pkg/export/svg.go
-- [ ] T109 [US3] Add legend and annotations to SVG in pkg/export/svg.go
-- [ ] T110 [P] [US3] Implement ValidationReport JSON export in pkg/validation/export.go
-- [ ] T111 [P] [US3] Write unit tests for all exporters in pkg/export/export_test.go
-- [ ] T112 [US3] Add export methods to Artifact in pkg/dungeon/artifact.go
-- [ ] T113 [US3] Run quality gates (golangci-lint run, go test ./...)
+- [x] T098 [P] Create pkg/export package for export functionality
+- [x] T099 [P] [US3] Implement JSON export for complete Artifact in pkg/export/json.go
+- [x] T100 [P] [US3] Implement TMJ map builder with layer support in pkg/export/tmj.go
+- [x] T101 [US3] Implement TMJ tile layer export (floor, walls, doors) in pkg/export/tmj.go
+- [x] T102 [US3] Implement TMJ object layer export (entities, triggers) in pkg/export/tmj.go
+- [x] T103 [US3] Add TMJ tileset reference generation in pkg/export/tmj.go
+- [x] T104 [US3] Add TMJ compression support (gzip) in pkg/export/tmj.go
+- [x] T105 [P] [US3] Implement SVG exporter using github.com/ajstarks/svgo in pkg/export/svg.go
+- [x] T106 [US3] Add node-edge graph visualization to SVG in pkg/export/svg.go
+- [x] T107 [US3] Add color-coding by room archetype in SVG in pkg/export/svg.go
+- [x] T108 [US3] Add difficulty heatmap overlay to SVG in pkg/export/svg.go
+- [x] T109 [US3] Add legend and annotations to SVG in pkg/export/svg.go
+- [x] T110 [P] [US3] Implement ValidationReport JSON export in pkg/validation/export.go
+- [x] T111 [P] [US3] Write unit tests for all exporters in pkg/export/export_test.go
+- [x] T112 [US3] Add export methods to Artifact in pkg/dungeon/artifact.go
+- [x] T113 [US3] Run quality gates (golangci-lint run, go test ./...)
 
 **Checkpoint**: At this point, User Stories 1, 2, AND 3 work independently - generation with multiple export formats
 
