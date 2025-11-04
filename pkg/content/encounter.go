@@ -6,6 +6,7 @@ import (
 
 	"github.com/dshills/dungo/pkg/graph"
 	"github.com/dshills/dungo/pkg/rng"
+	"github.com/dshills/dungo/pkg/themes"
 )
 
 // enemyTable maps difficulty ranges to enemy types.
@@ -30,10 +31,21 @@ var enemyTable = map[string]struct {
 // Algorithm:
 //  1. Skip Start, Boss (special handling), Treasure, Vendor, Shrine rooms
 //  2. For each eligible room, calculate enemy count from difficulty
-//  3. Select enemy type(s) matching difficulty range
+//  3. Select enemy type(s) matching difficulty range (using theme pack if available)
 //  4. Place spawn points with dummy positions (actual positions require layout)
 //  5. Respect maxEnemiesPerRoom capacity limit
+//
+// Theme Integration:
+//   - If room has "biome" tag, load corresponding theme pack
+//   - Use theme's encounter table for difficulty-based enemy selection
+//   - Fall back to default enemy table if theme not found or no biome tag
 func spawnEnemies(g *graph.Graph, content *Content, maxEnemiesPerRoom int, rng *rng.RNG) error {
+	return spawnEnemiesWithThemes(g, content, maxEnemiesPerRoom, rng, nil)
+}
+
+// spawnEnemiesWithThemes is the internal implementation that supports theme pack injection.
+// themeLoader can be nil for default behavior.
+func spawnEnemiesWithThemes(g *graph.Graph, content *Content, maxEnemiesPerRoom int, rng *rng.RNG, themeLoader *themes.Loader) error {
 	spawnID := 0
 
 	// Sort room IDs for deterministic iteration
@@ -68,8 +80,8 @@ func spawnEnemies(g *graph.Graph, content *Content, maxEnemiesPerRoom int, rng *
 			continue
 		}
 
-		// Select enemy type based on difficulty
-		enemyType := selectEnemyType(room.Difficulty, rng)
+		// Select enemy type based on difficulty (with theme support)
+		enemyType := selectEnemyTypeWithTheme(room, rng, themeLoader)
 
 		// Create spawn point
 		// Position is placeholder (0,0) - actual position requires layout stage
@@ -111,8 +123,32 @@ func shouldSkipEnemyPlacement(room *graph.Room) bool {
 	}
 }
 
+// selectEnemyTypeWithTheme chooses an enemy type appropriate for the room's difficulty.
+// Attempts to use theme pack if room has biome tag, falls back to default table.
+func selectEnemyTypeWithTheme(room *graph.Room, rng *rng.RNG, themeLoader *themes.Loader) string {
+	// Try theme-based selection if loader available
+	if themeLoader != nil && room.Tags != nil {
+		if biome, ok := room.Tags["biome"]; ok && biome != "" {
+			// Load theme pack for this biome
+			themePack, err := themeLoader.Load(biome)
+			if err == nil && themePack != nil {
+				// Use theme adapter for selection
+				enemyType := themes.SelectEncounterFromTheme(themePack, room.Difficulty, rng)
+				if enemyType != "" {
+					return enemyType
+				}
+			}
+			// Theme load failed or no matching table - fall through to default
+		}
+	}
+
+	// Fall back to default enemy selection
+	return selectEnemyType(room.Difficulty, rng)
+}
+
 // selectEnemyType chooses an enemy type appropriate for the given difficulty.
 // Uses weighted random selection from enemies matching the difficulty range.
+// This is the default fallback when no theme pack is available.
 func selectEnemyType(difficulty float64, rng *rng.RNG) string {
 	// Sort enemy types for deterministic iteration
 	enemyTypes := make([]string, 0, len(enemyTable))

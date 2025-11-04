@@ -1,0 +1,103 @@
+name: arcane
+description: "Ancient magical towers filled with animated constructs and mystical energies"
+
+tilesets:
+  - name: floor
+    path: tiles/arcane_floor.png
+    tile_width: 32
+    tile_height: 32
+  - name: walls
+    path: tiles/arcane_walls.png
+    tile_width: 32
+    tile_height: 32
+  - name: decor
+    path: tiles/arcane_decor.png
+    tile_width: 32
+    tile_height: 32
+
+encounter_tables:
+  - difficulty: 0.3
+    entries:
+      - type: "animated_broom"
+        weight: 10
+      - type: "magical_wisp"
+        weight: 8
+      - type: "arcane_apprentice"
+        weight: 5
+
+  - difficulty: 0.5
+    entries:
+      - type: "fire_elemental"
+        weight: 7
+      - type: "ice_elemental"
+        weight: 7
+      - type: "stone_golem"
+        weight: 6
+      - type: "arcane_guardian"
+        weight: 5
+
+  - difficulty: 0.7
+    entries:
+      - type: "iron_golem"
+        weight: 8
+      - type: "lightning_elemental"
+        weight: 6
+      - type: "arcane_construct"
+        weight: 5
+      - type: "animated_armor"
+        weight: 4
+
+  - difficulty: 0.9
+    entries:
+      - type: "elder_elemental"
+        weight: 5
+      - type: "adamantine_golem"
+        weight: 4
+      - type: "archmage_construct"
+        weight: 3
+      - type: "prismatic_guardian"
+        weight: 2
+
+loot_tables:
+  - room_type: "treasure"
+    entries:
+      - type: "mana_crystal"
+        weight: 7
+      - type: "greater_spell_scroll"
+        weight: 5
+      - type: "arcane_focus"
+        weight: 4
+      - type: "golem_core"
+        weight: 3
+
+  - room_type: "boss"
+    entries:
+      - type: "legendary_staff"
+        weight: 5
+      - type: "archmage_tome"
+        weight: 3
+      - type: "prismatic_orb"
+        weight: 4
+      - type: "elemental_essence"
+        weight: 2
+
+  - room_type: "default"
+    entries:
+      - type: "mana_crystal"
+        weight: 10
+      - type: "scroll_of_light"
+        weight: 6
+      - type: "apprentice_wand"
+        weight: 5
+      - type: "spell_tome"
+        weight: 4
+
+decorators:
+  - type: "runes"
+    density: 0.4
+  - type: "magical_symbols"
+    density: 0.3
+  - type: "floating_crystals"
+    density: 0.2
+  - type: "arcane_circles"
+    density: 0.15

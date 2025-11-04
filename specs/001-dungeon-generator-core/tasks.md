@@ -229,29 +229,29 @@
 
 ### Tests for User Story 4 (MANDATORY - TDD) ⚠️
 
-- [ ] T114 [P] [US4] Unit test for theme pack YAML parsing in pkg/themes/loader_test.go
-- [ ] T115 [P] [US4] Unit test for encounter table selection by difficulty in pkg/themes/tables_test.go
-- [ ] T116 [P] [US4] Unit test for loot table weighted selection in pkg/themes/tables_test.go
-- [ ] T117 [US4] Integration test for custom theme pack loading and usage in pkg/themes/loader_test.go
+- [x] T114 [P] [US4] Unit test for theme pack YAML parsing in pkg/themes/loader_test.go
+- [x] T115 [P] [US4] Unit test for encounter table selection by difficulty in pkg/themes/tables_test.go
+- [x] T116 [P] [US4] Unit test for loot table weighted selection in pkg/themes/tables_test.go
+- [x] T117 [US4] Integration test for custom theme pack loading and usage in pkg/themes/loader_test.go
 
 ### Implementation for User Story 4
 
-- [ ] T118 [P] Create pkg/themes package for theme pack management
-- [ ] T119 [P] [US4] Implement ThemePack type structure in pkg/themes/theme.go
-- [ ] T120 [P] [US4] Implement ThemeLoader interface in pkg/themes/loader.go
-- [ ] T121 [US4] Add YAML theme pack parser in pkg/themes/loader.go
-- [ ] T122 [US4] Implement encounter table lookup by difficulty in pkg/themes/tables.go
-- [ ] T123 [US4] Implement loot table lookup by difficulty in pkg/themes/tables.go
-- [ ] T124 [US4] Implement weighted random selection from tables in pkg/themes/tables.go
-- [ ] T125 [US4] Add theme pack validation (required fields, valid structure) in pkg/themes/validator.go
-- [ ] T126 [P] [US4] Create crypt theme pack YAML in themes/crypt/theme.yaml
-- [ ] T127 [P] [US4] Create fungal theme pack YAML in themes/fungal/theme.yaml
-- [ ] T128 [P] [US4] Create arcane theme pack YAML in themes/arcane/theme.yaml
-- [ ] T129 [US4] Add theme pack integration to content placement in pkg/content/encounter.go
-- [ ] T130 [US4] Update loot distributor to use theme loot tables in pkg/content/loot.go
-- [ ] T131 [US4] Write unit tests for theme loading in pkg/themes/loader_test.go
-- [ ] T132 [US4] Write unit tests for table selection in pkg/themes/tables_test.go
-- [ ] T133 [US4] Run quality gates (golangci-lint run, go test ./...)
+- [x] T118 [P] Create pkg/themes package for theme pack management
+- [x] T119 [P] [US4] Implement ThemePack type structure in pkg/themes/theme.go
+- [x] T120 [P] [US4] Implement ThemeLoader interface in pkg/themes/loader.go
+- [x] T121 [US4] Add YAML theme pack parser in pkg/themes/loader.go
+- [x] T122 [US4] Implement encounter table lookup by difficulty in pkg/themes/tables.go
+- [x] T123 [US4] Implement loot table lookup by difficulty in pkg/themes/tables.go
+- [x] T124 [US4] Implement weighted random selection from tables in pkg/themes/tables.go
+- [x] T125 [US4] Add theme pack validation (required fields, valid structure) in pkg/themes/validator.go
+- [x] T126 [P] [US4] Create crypt theme pack YAML in themes/crypt/theme.yaml
+- [x] T127 [P] [US4] Create fungal theme pack YAML in themes/fungal/theme.yaml
+- [x] T128 [P] [US4] Create arcane theme pack YAML in themes/arcane/theme.yaml
+- [x] T129 [US4] Add theme pack integration to content placement in pkg/content/encounter.go
+- [x] T130 [US4] Update loot distributor to use theme loot tables in pkg/content/loot.go
+- [x] T131 [US4] Write unit tests for theme loading in pkg/themes/loader_test.go
+- [x] T132 [US4] Write unit tests for table selection in pkg/themes/tables_test.go
+- [x] T133 [US4] Run quality gates (golangci-lint run, go test ./...)
 
 **Checkpoint**: All user stories complete - full feature set working independently
 

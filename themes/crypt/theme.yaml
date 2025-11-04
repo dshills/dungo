@@ -1,0 +1,101 @@
+name: crypt
+description: "Dark crypts filled with undead horrors and ancient treasures"
+
+tilesets:
+  - name: floor
+    path: tiles/crypt_floor.png
+    tile_width: 32
+    tile_height: 32
+  - name: walls
+    path: tiles/crypt_walls.png
+    tile_width: 32
+    tile_height: 32
+  - name: decor
+    path: tiles/crypt_decor.png
+    tile_width: 32
+    tile_height: 32
+
+encounter_tables:
+  - difficulty: 0.3
+    entries:
+      - type: "skeleton"
+        weight: 10
+      - type: "zombie"
+        weight: 5
+      - type: "ghoul"
+        weight: 3
+
+  - difficulty: 0.5
+    entries:
+      - type: "skeleton_warrior"
+        weight: 8
+      - type: "zombie_brute"
+        weight: 6
+      - type: "wraith"
+        weight: 4
+      - type: "ghast"
+        weight: 2
+
+  - difficulty: 0.7
+    entries:
+      - type: "wraith"
+        weight: 8
+      - type: "wight"
+        weight: 6
+      - type: "lich"
+        weight: 2
+      - type: "death_knight"
+        weight: 1
+
+  - difficulty: 0.9
+    entries:
+      - type: "lich"
+        weight: 5
+      - type: "death_knight"
+        weight: 4
+      - type: "vampire_lord"
+        weight: 2
+      - type: "bone_dragon"
+        weight: 1
+
+loot_tables:
+  - room_type: "treasure"
+    entries:
+      - type: "gold_pile"
+        weight: 10
+      - type: "health_potion"
+        weight: 5
+      - type: "ancient_scroll"
+        weight: 3
+      - type: "enchanted_armor"
+        weight: 2
+
+  - room_type: "boss"
+    entries:
+      - type: "legendary_weapon"
+        weight: 5
+      - type: "necromancer_staff"
+        weight: 3
+      - type: "soul_gem"
+        weight: 4
+      - type: "cursed_amulet"
+        weight: 2
+
+  - room_type: "default"
+    entries:
+      - type: "torch"
+        weight: 8
+      - type: "health_potion"
+        weight: 5
+      - type: "rusted_sword"
+        weight: 3
+
+decorators:
+  - type: "cobwebs"
+    density: 0.3
+  - type: "bones"
+    density: 0.4
+  - type: "candles"
+    density: 0.2
+  - type: "rubble"
+    density: 0.15

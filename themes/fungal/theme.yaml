@@ -1,0 +1,103 @@
+name: fungal
+description: "Damp caverns overgrown with bioluminescent fungi and spore-infested creatures"
+
+tilesets:
+  - name: floor
+    path: tiles/fungal_floor.png
+    tile_width: 32
+    tile_height: 32
+  - name: walls
+    path: tiles/fungal_walls.png
+    tile_width: 32
+    tile_height: 32
+  - name: decor
+    path: tiles/fungal_decor.png
+    tile_width: 32
+    tile_height: 32
+
+encounter_tables:
+  - difficulty: 0.3
+    entries:
+      - type: "spore_walker"
+        weight: 10
+      - type: "fungal_rat"
+        weight: 8
+      - type: "myconid_sprout"
+        weight: 5
+
+  - difficulty: 0.5
+    entries:
+      - type: "mushroom_giant"
+        weight: 8
+      - type: "spore_cloud"
+        weight: 6
+      - type: "myconid_guard"
+        weight: 5
+      - type: "fungal_shambler"
+        weight: 4
+
+  - difficulty: 0.7
+    entries:
+      - type: "mushroom_giant"
+        weight: 6
+      - type: "spore_tyrant"
+        weight: 5
+      - type: "myconid_sovereign"
+        weight: 4
+      - type: "cordyceps_host"
+        weight: 3
+
+  - difficulty: 0.9
+    entries:
+      - type: "ancient_myconid"
+        weight: 5
+      - type: "spore_dragon"
+        weight: 3
+      - type: "fungal_hivemind"
+        weight: 2
+      - type: "mushroom_colossus"
+        weight: 2
+
+loot_tables:
+  - room_type: "treasure"
+    entries:
+      - type: "rare_mushroom"
+        weight: 8
+      - type: "myconid_crown"
+        weight: 2
+      - type: "spore_mastery_staff"
+        weight: 3
+      - type: "eternal_growth_seed"
+        weight: 1
+
+  - room_type: "boss"
+    entries:
+      - type: "legendary_mushroom"
+        weight: 5
+      - type: "myconid_crown"
+        weight: 3
+      - type: "spore_mastery_staff"
+        weight: 4
+      - type: "fungal_armor"
+        weight: 2
+
+  - room_type: "default"
+    entries:
+      - type: "glowing_mushroom"
+        weight: 10
+      - type: "spore_sack"
+        weight: 7
+      - type: "fungal_tea"
+        weight: 6
+      - type: "antitoxin_potion"
+        weight: 4
+
+decorators:
+  - type: "mushrooms"
+    density: 0.5
+  - type: "vines"
+    density: 0.3
+  - type: "spores"
+    density: 0.4
+  - type: "moss"
+    density: 0.6

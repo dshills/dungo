@@ -6,6 +6,7 @@ import (
 
 	"github.com/dshills/dungo/pkg/graph"
 	"github.com/dshills/dungo/pkg/rng"
+	"github.com/dshills/dungo/pkg/themes"
 )
 
 // placeRequiredKeys finds all key-locked connectors and places keys before locks.
@@ -92,9 +93,20 @@ func placeRequiredKeys(g *graph.Graph, content *Content, rng *rng.RNG) error {
 // Algorithm:
 //  1. Calculate total reward budget from lootBudgetBase
 //  2. For each room, allocate loot proportional to room.Reward
-//  3. Place loot items in eligible rooms
+//  3. Place loot items in eligible rooms (using theme pack if available)
 //  4. Skip rooms that shouldn't have loot (Start, corridors, etc.)
+//
+// Theme Integration:
+//   - If room has "biome" tag, load corresponding theme pack
+//   - Use theme's loot table for reward-based item selection
+//   - Fall back to default loot table if theme not found or no biome tag
 func distributeLoot(g *graph.Graph, content *Content, budgetBase int, rng *rng.RNG) error {
+	return distributeLootWithThemes(g, content, budgetBase, rng, nil)
+}
+
+// distributeLootWithThemes is the internal implementation that supports theme pack injection.
+// themeLoader can be nil for default behavior.
+func distributeLootWithThemes(g *graph.Graph, content *Content, budgetBase int, rng *rng.RNG, themeLoader *themes.Loader) error {
 	// Sort room IDs for deterministic iteration
 	roomIDs := make([]string, 0, len(g.Rooms))
 	for id := range g.Rooms {
@@ -154,8 +166,8 @@ func distributeLoot(g *graph.Graph, content *Content, budgetBase int, rng *rng.R
 		for i := 0; i < itemCount; i++ {
 			itemValue := roomBudget / itemCount
 
-			// Select loot type based on value
-			lootType := selectLootType(itemValue, rng)
+			// Select loot type based on value (with theme support)
+			lootType := selectLootTypeWithTheme(room, itemValue, rng, themeLoader)
 
 			loot := Loot{
 				ID:       fmt.Sprintf("loot_%d", lootID),
@@ -317,7 +329,32 @@ var lootTypes = []struct {
 	{"artifact", 300, 1000},
 }
 
+// selectLootTypeWithTheme chooses a loot type appropriate for the room's reward value.
+// Attempts to use theme pack if room has biome tag, falls back to default table.
+func selectLootTypeWithTheme(room *graph.Room, value int, rng *rng.RNG, themeLoader *themes.Loader) string {
+	// Try theme-based selection if loader available
+	if themeLoader != nil && room.Tags != nil {
+		if biome, ok := room.Tags["biome"]; ok && biome != "" {
+			// Load theme pack for this biome
+			themePack, err := themeLoader.Load(biome)
+			if err == nil && themePack != nil {
+				// Use theme adapter for selection (map archetype to room type)
+				roomType := room.Archetype.String()
+				itemType := themes.SelectLootFromTheme(themePack, roomType, rng)
+				if itemType != "" {
+					return itemType
+				}
+			}
+			// Theme load failed or no matching table - fall through to default
+		}
+	}
+
+	// Fall back to default loot selection
+	return selectLootType(value, rng)
+}
+
 // selectLootType chooses a loot type appropriate for the given value.
+// This is the default fallback when no theme pack is available.
 func selectLootType(value int, rng *rng.RNG) string {
 	eligible := make([]string, 0)
 	weights := make([]float64, 0)
