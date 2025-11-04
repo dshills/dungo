@@ -104,6 +104,20 @@ go test ./pkg/synthesis
 go test -v ./...
 ```
 
+### Code Review (Pre-Commit)
+```bash
+# REQUIRED: Run mcp-pr code review before committing
+# Reviews unstaged changes using OpenAI for quality assurance
+mcp__mcp-pr__review_unstaged with OpenAI provider
+
+# Address findings:
+# - HIGH severity: MUST fix before commit
+# - MEDIUM severity: Document as tech debt if not immediately fixable
+# - LOW/INFO: Optional improvements
+```
+
+Per constitution v1.1.0, code review is mandatory before all commits.
+
 ### Linting
 ```bash
 # Run golangci-lint (configuration in .golangci.yml)

@@ -1,23 +1,26 @@
 <!--
 Sync Impact Report:
-- Version: none → 1.0.0 (INITIAL)
-- Initial constitution ratified
-- Principles defined:
-  1. Test-First Development (NON-NEGOTIABLE)
-  2. Quality Gates (lint + tests must pass to commit)
-  3. Deterministic Design (seed-based reproducibility)
-  4. Performance Consciousness (< 50ms graph+embed, < 200ms total)
-  5. Concurrent Execution (parallel agents, tasks, tests)
+- Version: 1.0.0 → 1.1.0 (MINOR)
+- Amendment: Added mandatory code review requirement using mcp-pr
+- Principles modified:
+  - Principle II (Quality Gates): Enhanced to include mcp-pr code review requirement
+    - Added: Code review MUST run before commit using mcp-pr with OpenAI
+    - Added: HIGH severity findings must be addressed
+    - Added: MEDIUM severity documented as tech debt
+    - Rationale expanded to include AI-powered code review benefits
+- Pre-Commit Requirements updated:
+  - Added step 1: Run mcp-pr code review (new requirement)
+  - Renumbered existing steps 1-4 to steps 2-5
+- Compliance Review section updated:
+  - Added: Evidence of mcp-pr code review with findings addressed
 - Templates requiring updates:
-  ✅ plan-template.md - Constitution Check section aligns with quality gates
-  ✅ spec-template.md - User scenarios support testability requirement
-  ✅ tasks-template.md - Updated to reflect MANDATORY TDD (changed from OPTIONAL)
-    - Line 11: Tests now MANDATORY
-    - Lines 82, 108, 130: Changed "OPTIONAL" to "MANDATORY - TDD"
-    - Line 181: Clarified TDD is non-negotiable
-    - Line 201: Updated parallel example
-- Follow-up: None
+  ✅ plan-template.md - No changes needed (quality gates concept unchanged)
+  ✅ spec-template.md - No changes needed
+  ✅ tasks-template.md - No changes needed
+  ✅ CLAUDE.md - Should add mcp-pr usage guidance (⚠ pending)
+- Follow-up: Update CLAUDE.md to document mcp-pr usage in pre-commit workflow
 -->
+
 
 # Dungo Constitution
 
@@ -41,13 +44,16 @@ All code MUST be written following strict Test-Driven Development (TDD):
 
 Code MUST pass quality gates before commit:
 
+- **Code review MUST run**: `mcp-pr` review of unstaged changes with OpenAI provider
+  - Address all HIGH severity findings before committing
+  - Document MEDIUM severity as tech debt if not immediately fixable
 - **Linting MUST pass**: `golangci-lint run` with zero errors (configuration in `.golangci.yml`)
 - **All tests MUST pass**: `go test ./...` with 100% success rate
-- **No exceptions**: Commits with failing lint or tests are PROHIBITED
+- **No exceptions**: Commits with failing lint, tests, or unaddressed HIGH severity code review findings are PROHIBITED
 
 Configured linters (non-negotiable): gofmt, govet, staticcheck, errcheck, gosimple, ineffassign, unused, typecheck, gocyclo (max 15), misspell
 
-**Rationale**: Quality gates prevent technical debt accumulation. The codebase must maintain high standards from day one. Automated checks catch issues before they propagate.
+**Rationale**: Quality gates prevent technical debt accumulation. The codebase must maintain high standards from day one. Automated checks and AI-powered code review catch issues before they propagate. mcp-pr provides additional analysis for security, best practices, and architectural consistency.
 
 ### III. Deterministic Design
 
@@ -134,10 +140,15 @@ Soft constraints optimized but not required:
 
 Before committing, developer MUST:
 
-1. Run `golangci-lint run` → MUST pass with zero errors
-2. Run `go test ./...` → MUST pass 100% tests
-3. Run `gofmt -l .` → MUST return empty (no unformatted files)
-4. Verify no debug code, TODOs, or commented-out blocks
+1. **Run code review**: Use mcp-pr to review unstaged changes before commit
+   - Command: `mcp__mcp-pr__review_unstaged` with OpenAI provider
+   - Address all HIGH severity findings before committing
+   - Document MEDIUM severity findings as technical debt if not immediately addressable
+   - Review output provides quality assurance and catches issues early
+2. Run `golangci-lint run` → MUST pass with zero errors
+3. Run `go test ./...` → MUST pass 100% tests
+4. Run `gofmt -l .` → MUST return empty (no unformatted files)
+5. Verify no debug code, TODOs, or commented-out blocks
 
 ### Implementation Process
 
@@ -188,6 +199,7 @@ Constitution version follows MAJOR.MINOR.PATCH:
 
 All pull requests MUST include:
 
+- Evidence of mcp-pr code review with HIGH severity findings addressed
 - Evidence of passing lint (`golangci-lint run` output)
 - Evidence of passing tests (`go test ./...` output)
 - Confirmation of TDD workflow (tests written first)
@@ -195,4 +207,4 @@ All pull requests MUST include:
 
 Use `CLAUDE.md` for runtime development guidance specific to this repository.
 
-**Version**: 1.0.0 | **Ratified**: 2025-11-04 | **Last Amended**: 2025-11-04
+**Version**: 1.1.0 | **Ratified**: 2025-11-04 | **Last Amended**: 2025-11-04
