@@ -182,6 +182,21 @@ func CheckNoOverlaps(g *graph.Graph, layout *dungeon.Layout) dungeon.ConstraintR
 
 // CheckPathBounds ensures Start-to-Boss path length is within reasonable bounds.
 // This is a hard constraint to prevent degenerate dungeons.
+//
+// Design Philosophy:
+// This validation accepts both linear and branching (hub-and-spoke) dungeon architectures.
+// For hub-and-spoke dungeons (Start → Hub → Boss), the critical path is intentionally short
+// (typically 3-4 rooms), with most content in optional branches off the hubs.
+//
+// Path Length Calculation:
+// - pathLength = number of rooms in shortest path (nodes, not edges)
+// - For Start → Hub → Boss, pathLength = 3
+// - CalculatePathLength() metric uses edges (pathLength - 1) for display purposes
+//
+// Bounds:
+//   - Minimum: max(2, roomsMin/10) to allow very short critical paths in branching dungeons
+//     Examples: 25 rooms → min 2 | 50 rooms → min 5 | 100 rooms → min 10
+//   - Maximum: roomsMax * 2 (very generous, allows linear dungeons and cycles)
 func CheckPathBounds(g *graph.Graph, cfg *dungeon.Config) dungeon.ConstraintResult {
 	startID := FindStartRoom(g)
 	bossID := FindBossRoom(g)
@@ -211,13 +226,15 @@ func CheckPathBounds(g *graph.Graph, cfg *dungeon.Config) dungeon.ConstraintResu
 	minRooms := cfg.Size.RoomsMin
 	maxRooms := cfg.Size.RoomsMax
 
-	// Critical path should be at least 2 rooms (start + boss minimum)
-	// but not more than total room count (upper bound is generous to allow flexibility)
-	minPathLength := max(2, minRooms/10) // Very permissive: 10% of min rooms, or 2 minimum
-	maxPathLength := maxRooms * 2        // Very generous upper bound
+	// Minimum path length: at least 2 rooms, or 10% of minimum rooms
+	// This accepts branching architectures where most rooms are optional branches
+	minPathLength := max(2, minRooms/10)
+
+	// Maximum path length: very generous to allow linear dungeons and cycles
+	maxPathLength := maxRooms * 2
 
 	satisfied := pathLength >= minPathLength && pathLength <= maxPathLength
-	details := fmt.Sprintf("Path length: %d (bounds: %d-%d)", pathLength, minPathLength, maxPathLength)
+	details := fmt.Sprintf("Path length: %d rooms (bounds: %d-%d)", pathLength, minPathLength, maxPathLength)
 
 	return NewHardConstraintResult(
 		"PathBounds",

@@ -11,6 +11,15 @@ import (
 // GrammarSynthesizer generates graphs using a grammar-based approach with production rules.
 // It starts with a core trio (Start-Mid-Boss) and applies production rules to reach target size.
 //
+// Architecture: Hub-and-Spoke Design
+// The synthesizer creates branching dungeons with a short critical path and many optional branches.
+// For example, a 30-room dungeon might have:
+//   - Critical path: Start → Hub → Boss (3 rooms, 2 edges)
+//   - Optional content: 27 rooms branching off the hub and other connection points
+//
+// This architecture differs from linear dungeons where 30% of rooms are on the critical path.
+// Instead, most content is optional, rewarding exploration while keeping the main path short.
+//
 // Production rules:
 // - ExpandHub: Adds spoke rooms around hub rooms
 // - InsertKeyLoop: Creates key-lock pairs with required paths
@@ -21,6 +30,7 @@ import (
 // - All rooms reachable from Start
 // - Keys obtainable before their locks
 // - Room count within Config bounds
+// - Critical path length compatible with branching architecture (see validation.CheckPathBounds)
 type GrammarSynthesizer struct {
 	maxRetries int // Maximum attempts to satisfy constraints
 }

@@ -28,6 +28,12 @@ func CalculateBranchingFactor(g *graph.Graph) float64 {
 
 // CalculatePathLength computes the length of the critical path from Start to Boss.
 // Returns 0 if Start or Boss rooms don't exist, or if no path exists.
+//
+// Note: This returns the number of EDGES (transitions), not nodes (rooms).
+// For example, Start → Hub → Boss has 3 rooms but path length = 2 edges.
+// This metric represents the number of transitions a player must make.
+//
+// Compare with CheckPathBounds which validates using node count (len(path)).
 func CalculatePathLength(g *graph.Graph) int {
 	startID := FindStartRoom(g)
 	bossID := FindBossRoom(g)
@@ -42,6 +48,7 @@ func CalculatePathLength(g *graph.Graph) int {
 	}
 
 	// Path length is the number of edges, which is (number of nodes - 1)
+	// This represents transitions between rooms, not the count of rooms themselves
 	return len(path) - 1
 }
 
