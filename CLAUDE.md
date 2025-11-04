@@ -105,10 +105,20 @@ go test -v ./...
 ```
 
 ### Code Review (Pre-Commit)
+
+**REQUIRED** per constitution v1.1.1: Run mcp-pr before committing.
+
+**Security First**: Never review files with secrets, credentials, or PII.
+
 ```bash
-# REQUIRED: Run mcp-pr code review before committing
-# Reviews unstaged changes using OpenAI for quality assurance
-mcp__mcp-pr__review_unstaged with OpenAI provider
+# Stage your changes first
+git add <files>
+
+# Run code review on staged changes (in Claude Code)
+# Use mcp-pr tool: mcp__mcp-pr__review_staged with OpenAI provider
+
+# Save evidence for PR compliance
+# The review will show findings with severity levels
 
 # Address findings:
 # - HIGH severity: MUST fix before commit
@@ -116,7 +126,20 @@ mcp__mcp-pr__review_unstaged with OpenAI provider
 # - LOW/INFO: Optional improvements
 ```
 
-Per constitution v1.1.0, code review is mandatory before all commits.
+**Exemptions**:
+- Trivial changes (<10 lines)
+- Automated commits (e.g., dependency updates)
+- Emergency hotfixes (with post-commit review)
+
+**Data Privacy**:
+- Never review files containing: API keys, passwords, tokens, certificates, PII
+- Review only code in `pkg/`, `cmd/`, test files
+- Exclude: `.env`, `*_secret.go`, `credentials/`, `secrets/`
+
+**API Key Handling**:
+- Store OpenAI API key in environment variable or keychain
+- Never commit API keys to repository
+- Rotate keys regularly per security policy
 
 ### Linting
 ```bash

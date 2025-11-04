@@ -1,24 +1,25 @@
 <!--
 Sync Impact Report:
-- Version: 1.0.0 → 1.1.0 (MINOR)
-- Amendment: Added mandatory code review requirement using mcp-pr
+- Version: 1.0.0 → 1.1.1 (PATCH)
+- Amendment: Fixed security and usability issues in code review requirement
+- Changes from v1.1.0:
+  - Fixed HIGH severity: Added security guidance for data privacy
+  - Fixed HIGH severity: Clarified command syntax (Claude Code vs CLI)
+  - Fixed MEDIUM severity: Changed from "unstaged" to "staged" changes
+  - Added: Security safeguards (redact secrets, exclude sensitive files)
+  - Added: Exemptions for trivial changes and hotfixes
+  - Added: Evidence format requirement (review-report.md)
+  - Added: API key handling guidance (referenced in rationale)
 - Principles modified:
-  - Principle II (Quality Gates): Enhanced to include mcp-pr code review requirement
-    - Added: Code review MUST run before commit using mcp-pr with OpenAI
-    - Added: HIGH severity findings must be addressed
-    - Added: MEDIUM severity documented as tech debt
-    - Rationale expanded to include AI-powered code review benefits
+  - Principle II (Quality Gates): Added security requirements and exemptions
 - Pre-Commit Requirements updated:
-  - Added step 1: Run mcp-pr code review (new requirement)
-  - Renumbered existing steps 1-4 to steps 2-5
-- Compliance Review section updated:
-  - Added: Evidence of mcp-pr code review with findings addressed
+  - Step 1: Enhanced with security, privacy, and exemptions guidance
 - Templates requiring updates:
-  ✅ plan-template.md - No changes needed (quality gates concept unchanged)
+  ✅ plan-template.md - No changes needed
   ✅ spec-template.md - No changes needed
   ✅ tasks-template.md - No changes needed
-  ✅ CLAUDE.md - Should add mcp-pr usage guidance (⚠ pending)
-- Follow-up: Update CLAUDE.md to document mcp-pr usage in pre-commit workflow
+  ✅ CLAUDE.md - Updated with security guidance
+- Follow-up: None (all security issues addressed)
 -->
 
 
@@ -44,16 +45,20 @@ All code MUST be written following strict Test-Driven Development (TDD):
 
 Code MUST pass quality gates before commit:
 
-- **Code review MUST run**: `mcp-pr` review of unstaged changes with OpenAI provider
-  - Address all HIGH severity findings before committing
-  - Document MEDIUM severity as tech debt if not immediately fixable
+- **Code review MUST run**: `mcp-pr` review of staged changes with OpenAI provider
+  - **Security requirement**: Only review non-sensitive code (exclude secrets, credentials, PII)
+  - **Data privacy**: Redact sensitive information before sending to external LLM
+  - **Action**: Address all HIGH severity findings before committing
+  - **Tech debt**: Document MEDIUM severity as tech debt if not immediately fixable
+  - **Exemptions**: Trivial changes (<10 lines), automated commits, emergency hotfixes may skip
+  - **Evidence**: Save review report (`--output=review-report.md`) for PR compliance
 - **Linting MUST pass**: `golangci-lint run` with zero errors (configuration in `.golangci.yml`)
 - **All tests MUST pass**: `go test ./...` with 100% success rate
 - **No exceptions**: Commits with failing lint, tests, or unaddressed HIGH severity code review findings are PROHIBITED
 
 Configured linters (non-negotiable): gofmt, govet, staticcheck, errcheck, gosimple, ineffassign, unused, typecheck, gocyclo (max 15), misspell
 
-**Rationale**: Quality gates prevent technical debt accumulation. The codebase must maintain high standards from day one. Automated checks and AI-powered code review catch issues before they propagate. mcp-pr provides additional analysis for security, best practices, and architectural consistency.
+**Rationale**: Quality gates prevent technical debt accumulation. The codebase must maintain high standards from day one. Automated checks and AI-powered code review catch issues before they propagate. mcp-pr provides additional analysis for security, best practices, and architectural consistency. Security safeguards ensure sensitive data never leaves the organization.
 
 ### III. Deterministic Design
 
@@ -140,11 +145,15 @@ Soft constraints optimized but not required:
 
 Before committing, developer MUST:
 
-1. **Run code review**: Use mcp-pr to review unstaged changes before commit
-   - Command: `mcp__mcp-pr__review_unstaged` with OpenAI provider
-   - Address all HIGH severity findings before committing
-   - Document MEDIUM severity findings as technical debt if not immediately addressable
-   - Review output provides quality assurance and catches issues early
+1. **Run code review**: Use mcp-pr to review staged changes before commit
+   - **Security**: Review only non-sensitive code (redact secrets, credentials, PII before review)
+   - **Command** (in Claude Code): `mcp__mcp-pr__review_staged` with OpenAI provider
+   - **CLI alternative**: `mcp-pr review --staged --provider=openai --output=review-report.md`
+   - **Data privacy**: Never review files containing secrets, API keys, credentials, or PII
+   - **Evidence**: Save review report for PR inclusion
+   - **Action**: Address all HIGH severity findings before committing
+   - **Tech debt**: Document MEDIUM severity findings if not immediately fixable
+   - **Exemptions**: Automated commits, hotfixes, and trivial changes (<10 lines) may skip review
 2. Run `golangci-lint run` → MUST pass with zero errors
 3. Run `go test ./...` → MUST pass 100% tests
 4. Run `gofmt -l .` → MUST return empty (no unformatted files)
@@ -207,4 +216,4 @@ All pull requests MUST include:
 
 Use `CLAUDE.md` for runtime development guidance specific to this repository.
 
-**Version**: 1.1.0 | **Ratified**: 2025-11-04 | **Last Amended**: 2025-11-04
+**Version**: 1.1.1 | **Ratified**: 2025-11-04 | **Last Amended**: 2025-11-04
