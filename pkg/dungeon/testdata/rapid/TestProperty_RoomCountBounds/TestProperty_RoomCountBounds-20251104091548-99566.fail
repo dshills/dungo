@@ -1,0 +1,49 @@
+# 2025/11/04 09:15:48.219059 [TestProperty_RoomCountBounds] [rapid] draw roomsMin: 10
+# 2025/11/04 09:15:48.219061 [TestProperty_RoomCountBounds] [rapid] draw roomsMax: 70
+# 2025/11/04 09:15:48.219063 [TestProperty_RoomCountBounds] [rapid] draw branchingAvg: 3
+# 2025/11/04 09:15:48.219064 [TestProperty_RoomCountBounds] [rapid] draw branchingMax: 3
+# 2025/11/04 09:15:48.219064 [TestProperty_RoomCountBounds] [rapid] draw pacingVariance: 2.0423430309120248e-63
+# 2025/11/04 09:15:48.219065 [TestProperty_RoomCountBounds] [rapid] draw secretDensity: 8.606647989308497e-20
+# 2025/11/04 09:15:48.219066 [TestProperty_RoomCountBounds] [rapid] draw optionalRatio: 0.17938655614852905
+# 2025/11/04 09:15:48.219067 [TestProperty_RoomCountBounds] [rapid] draw seed: 0x58
+# 
+v0.4.8#2620980516820556086
+0x0
+0x2b80000000020
+0x0
+0x1dbf264748ebf0
+0xfbe41535f5565
+0x3c
+0xdff6971e9d73c
+0xe3a1fe8ad8547
+0x1cf3349764ef74
+0x1
+0x1
+0x0
+0x0
+0x79eb3f3c20e8c
+0xc6667603b2609
+0x1
+0x1940fcda0a65af
+0xc37fd7ffecdbe
+0x12808df64fec17
+0xcf
+0x0
+0x23
+0xae2aeb1af9345
+0xc5a6cc8c3aa7e
+0x113d95c1ce1bc5
+0xfc6608a52b210
+0x3e
+0x0
+0x1b
+0x966ffd6fbc8ed
+0x9b9195404a9ad
+0x4772149ad281
+0xa7fc69341d652
+0x1
+0x0
+0x15
+0x6f623ea42a5e8
+0xa58cffa92c326
+0x58

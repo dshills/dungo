@@ -1,0 +1,34 @@
+seed: 99999
+size:
+  roomsMin: 50
+  roomsMax: 70
+branching:
+  avg: 1.8
+  max: 4
+pacing:
+  curve: "S_CURVE"
+  variance: 0.15
+themes:
+  - fungal
+keys:
+  - name: bronze
+    count: 2
+  - name: silver
+    count: 1
+  - name: gold
+    count: 1
+secretDensity: 0.18
+optionalRatio: 0.25
+constraints:
+  - kind: Connectivity
+    severity: Hard
+    expr: "isConnected()"
+  - kind: KeyLock
+    severity: Hard
+    expr: "keyBeforeLock('bronze')"
+  - kind: KeyLock
+    severity: Hard
+    expr: "keyBeforeLock('silver')"
+  - kind: KeyLock
+    severity: Hard
+    expr: "keyBeforeLock('gold')"

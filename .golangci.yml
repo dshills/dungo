@@ -1,0 +1,59 @@
+# T006: Configure golangci-lint
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - gofmt
+    - govet
+    - staticcheck
+    - errcheck
+    - gosimple
+    - ineffassign
+    - unused
+    - typecheck
+    - gocyclo
+    - misspell
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+
+issues:
+  exclude-use-default: false
+  max-same-issues: 0
+  exclude-rules:
+    # Large switch statements for instruction types are acceptable
+    - path: pkg/llvmgen/builder.go
+      text: "cyclomatic complexity"
+      linters:
+        - gocyclo
+    # Test files can have higher complexity for comprehensive test cases
+    - path: _test\.go
+      text: "cyclomatic complexity"
+      linters:
+        - gocyclo
+    # Complex layout normalization functions are acceptable
+    - path: pkg/dungeon/dungeon.go
+      text: "cyclomatic complexity.*normalizeLayout"
+      linters:
+        - gocyclo
+    - path: pkg/dungeon/dungeon.go
+      text: "cyclomatic complexity.*normalizeEmbeddingLayout"
+      linters:
+        - gocyclo
+    # Complex carving algorithms are acceptable
+    - path: pkg/carving/corridor.go
+      text: "cyclomatic complexity.*RouteSmoothCorridor"
+      linters:
+        - gocyclo
+    - path: pkg/carving/tilemap.go
+      text: "cyclomatic complexity.*FloodFill"
+      linters:
+        - gocyclo
+    # Complex content distribution logic is acceptable
+    - path: pkg/content/loot.go
+      text: "cyclomatic complexity.*distributeLoot"
+      linters:
+        - gocyclo

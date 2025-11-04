@@ -1,0 +1,35 @@
+# Basic dungeon configuration example
+# This demonstrates a simple crypt-themed dungeon with 20-50 rooms
+
+seed: 42  # Use 0 for auto-generation from current time
+
+size:
+  roomsMin: 20
+  roomsMax: 50
+
+branching:
+  avg: 2.0   # Average connections per room (1.5-3.0)
+  max: 4     # Maximum connections for any room (2-5)
+
+pacing:
+  curve: LINEAR      # Options: LINEAR, S_CURVE, EXPONENTIAL, CUSTOM
+  variance: 0.15     # Allowed deviation from curve (0.0-0.3)
+
+themes:
+  - crypt
+
+keys:
+  - name: silver
+    count: 2
+  - name: gold
+    count: 1
+
+constraints:
+  - kind: connectivity
+    severity: hard
+    expr: isConnected()
+    priority: 100
+
+allowDisconnected: false
+secretDensity: 0.15      # 15% of rooms are secret (0.0-0.3)
+optionalRatio: 0.25      # 25% of rooms are optional (0.1-0.4)

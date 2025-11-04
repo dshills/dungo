@@ -1,50 +1,198 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report:
+- Version: none → 1.0.0 (INITIAL)
+- Initial constitution ratified
+- Principles defined:
+  1. Test-First Development (NON-NEGOTIABLE)
+  2. Quality Gates (lint + tests must pass to commit)
+  3. Deterministic Design (seed-based reproducibility)
+  4. Performance Consciousness (< 50ms graph+embed, < 200ms total)
+  5. Concurrent Execution (parallel agents, tasks, tests)
+- Templates requiring updates:
+  ✅ plan-template.md - Constitution Check section aligns with quality gates
+  ✅ spec-template.md - User scenarios support testability requirement
+  ✅ tasks-template.md - Updated to reflect MANDATORY TDD (changed from OPTIONAL)
+    - Line 11: Tests now MANDATORY
+    - Lines 82, 108, 130: Changed "OPTIONAL" to "MANDATORY - TDD"
+    - Line 181: Clarified TDD is non-negotiable
+    - Line 201: Updated parallel example
+- Follow-up: None
+-->
+
+# Dungo Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Test-First Development (NON-NEGOTIABLE)
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+All code MUST be written following strict Test-Driven Development (TDD):
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+- Tests written FIRST → User approves tests → Tests FAIL → Implementation begins
+- Red-Green-Refactor cycle is mandatory, no exceptions
+- Unit tests for all packages (graph, synthesis, embedding, carving, content, validation)
+- Property-based tests for constraints (connectivity, key-before-lock, degree bounds)
+- Golden tests for determinism (fixed seeds produce identical SVG/JSON snapshots)
+- Integration tests via simulated agent (verifies boss and key findability)
+- Test artifacts stored in `testdata/` with versioned schema
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**Rationale**: The dungeon generator is a constraint-driven system with complex invariants. Without TDD, subtle bugs in graph synthesis or spatial embedding will compound through the pipeline. Property-based testing is essential for validating constraints across random seeds.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### II. Quality Gates
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+Code MUST pass quality gates before commit:
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- **Linting MUST pass**: `golangci-lint run` with zero errors (configuration in `.golangci.yml`)
+- **All tests MUST pass**: `go test ./...` with 100% success rate
+- **No exceptions**: Commits with failing lint or tests are PROHIBITED
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+Configured linters (non-negotiable): gofmt, govet, staticcheck, errcheck, gosimple, ineffassign, unused, typecheck, gocyclo (max 15), misspell
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**Rationale**: Quality gates prevent technical debt accumulation. The codebase must maintain high standards from day one. Automated checks catch issues before they propagate.
+
+### III. Deterministic Design
+
+The generator MUST produce identical output given identical inputs:
+
+- Single master seed determines all randomness
+- **Stage-specific sub-seeds via**: `seed_stage = H(master_seed, stage_name, config_hash)` where:
+  - `H` = SHA-256 hash function (crypto/sha256)
+  - Output: First 8 bytes of hash as big-endian uint64
+  - `master_seed`: 8-byte big-endian encoding of the master seed
+  - `stage_name`: UTF-8 bytes of stage identifier ("synthesis", "embedding", etc.)
+  - `config_hash`: SHA-256 hash of serialized configuration
+- All random decisions use stage-local RNG with `math/rand.NewSource(int64(seed_stage))`
+- Never use global `rand` functions or `crypto/rand`
+- Pure functions throughout pipeline (Graph → Embed → Carve → Content → Validate)
+- Reproducibility enables caching, stepwise testing, and debugging
+
+**Rationale**: Determinism is a core requirement per specification §10. Non-deterministic generation breaks golden tests, makes debugging impossible, and violates the fundamental contract with users who expect consistent results from seeds. Precise specification of hash function and seed derivation ensures cross-platform reproducibility.
+
+### IV. Performance Consciousness
+
+Implementation MUST meet performance targets:
+
+- 60-room dungeon: < 50ms for graph + embedding stage
+- Full generation: < 200ms including carve and content
+- Memory: < 50MB per generation
+- **Runtime generation: Single-threaded** (v1 - ensures determinism and predictable memory)
+- O(N log N) typical complexity for N rooms
+
+Performance regressions caught via benchmarks (`go test -bench ./...`)
+
+**Rationale**: Performance targets defined in specification §17 are non-negotiable. The generator must be production-ready for game engines. Performance debt is difficult to fix later; design with targets from the start. Single-threaded runtime ensures deterministic behavior and predictable memory usage; parallelism is reserved for development tooling (tests, CI, concurrent agents).
+
+### V. Concurrent Execution
+
+Development workflow MUST leverage parallel execution (**development time only**):
+
+- Use concurrent agents whenever possible (multiple Task tool calls in single message)
+- Parallel test execution across packages when independent (`go test -parallel`)
+- Parallel implementation of independent user stories
+- Parallel linting and testing during CI/CD
+- Task planning explicitly marks parallelizable work with [P] prefix
+
+**Scope**: This principle applies to **development tooling and CI/CD only**. Runtime dungeon generation remains single-threaded (Principle IV) for determinism and predictable resource usage.
+
+**Rationale**: Maximizes development velocity and mirrors how the pipeline stages can be independently developed and tested. Reduces latency in AI-assisted development by batching tool calls. Clear separation between development parallelism (encouraged) and runtime behavior (single-threaded).
+
+## Quality Standards
+
+### Code Organization
+
+- Package-per-stage architecture: `pkg/dungeon`, `pkg/graph`, `pkg/synthesis`, `pkg/embedding`, `pkg/carving`, `pkg/content`, `pkg/validation`, `pkg/rng`
+- Use `pkg/` for library packages (not `internal/` initially)
+- No shared `util` packages; utilities live in respective domain packages
+- Each package independently testable with minimal dependencies
+
+### Error Handling
+
+- Return errors, never panic (except unrecoverable programmer errors)
+- Wrap errors with context: `fmt.Errorf("stage failed: %w", err)`
+- Validate inputs at pipeline stage boundaries
+- Use context.Context for cancellation and timeouts
+
+### Constraint Validation
+
+Hard constraints MUST pass before proceeding to next stage:
+
+- Single connected component (or `allowDisconnected=true` for teleport motifs)
+- Degree bounds per room and globally
+- Key-before-lock reachability for all lock gates
+- At least one viable Start→Boss path within `minLen..maxLen`
+- No spatial overlaps; corridor feasibility
+
+Soft constraints optimized but not required:
+
+- Pacing adherence to target curve
+- Thematic clustering (biome continuity)
+- Cycle density within acceptable band
+- Secret density and reward pacing
+
+## Development Workflow
+
+### Pre-Commit Requirements
+
+Before committing, developer MUST:
+
+1. Run `golangci-lint run` → MUST pass with zero errors
+2. Run `go test ./...` → MUST pass 100% tests
+3. Run `gofmt -l .` → MUST return empty (no unformatted files)
+4. Verify no debug code, TODOs, or commented-out blocks
+
+### Implementation Process
+
+1. Review specification in `specs/dungo_specification.md`
+2. Use `/speckit.specify` to create feature spec with user stories
+3. Use `/speckit.plan` to generate implementation plan
+4. Use `/speckit.tasks` to break down into task list
+5. Write tests FIRST (TDD red phase)
+6. Verify tests FAIL appropriately
+7. Implement feature (TDD green phase)
+8. Refactor for clarity and performance (TDD refactor phase)
+9. Run quality gates (lint + tests)
+10. Commit with descriptive message
+
+### Testing Discipline
+
+For each feature:
+
+- **Unit tests**: Test individual functions and types
+- **Integration tests**: Test pipeline stage interactions
+- **Property tests**: Test constraints across random seeds (use `gopter` or similar)
+- **Golden tests**: Snapshot SVG/JSON for fixed seeds; diff on changes
+- **Fuzz tests**: Push boundaries until violations surface
+
+Test coverage tracked; aim for >80% overall, >90% for core packages.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes all other development practices. All code reviews, pull requests, and commits MUST verify compliance with these principles.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+### Amendment Process
+
+1. Propose amendment with rationale and impact analysis
+2. Discuss with team/stakeholders
+3. Update constitution with version bump (semantic versioning)
+4. Update dependent templates and documentation
+5. Commit with sync impact report
+
+### Versioning
+
+Constitution version follows MAJOR.MINOR.PATCH:
+
+- **MAJOR**: Backward incompatible principle removals or redefinitions
+- **MINOR**: New principle or materially expanded guidance
+- **PATCH**: Clarifications, wording, typo fixes
+
+### Compliance Review
+
+All pull requests MUST include:
+
+- Evidence of passing lint (`golangci-lint run` output)
+- Evidence of passing tests (`go test ./...` output)
+- Confirmation of TDD workflow (tests written first)
+- Performance benchmark results if touching hot paths
+
+Use `CLAUDE.md` for runtime development guidance specific to this repository.
+
+**Version**: 1.0.0 | **Ratified**: 2025-11-04 | **Last Amended**: 2025-11-04

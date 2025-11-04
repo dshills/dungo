@@ -1,0 +1,29 @@
+seed: 12345
+size:
+  roomsMin: 25
+  roomsMax: 35
+branching:
+  avg: 1.7
+  max: 3
+pacing:
+  curve: "S_CURVE"
+  variance: 0.15
+themes:
+  - crypt
+keys:
+  - name: silver
+    count: 1
+  - name: gold
+    count: 1
+secretDensity: 0.15
+optionalRatio: 0.20
+constraints:
+  - kind: Connectivity
+    severity: hard
+    expr: "isConnected()"
+  - kind: KeyLock
+    severity: hard
+    expr: "keyBeforeLock('silver')"
+  - kind: KeyLock
+    severity: hard
+    expr: "keyBeforeLock('gold')"

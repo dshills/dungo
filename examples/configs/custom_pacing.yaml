@@ -1,0 +1,62 @@
+# Advanced dungeon configuration with custom pacing curve
+# This demonstrates custom difficulty progression with specific control points
+
+seed: 0  # Auto-generate seed from current time
+
+size:
+  roomsMin: 30
+  roomsMax: 80
+
+branching:
+  avg: 2.5
+  max: 5
+
+pacing:
+  curve: CUSTOM
+  variance: 0.2
+  customPoints:
+    - [0.0, 0.0]    # Start easy
+    - [0.2, 0.1]    # Gentle beginning
+    - [0.4, 0.3]    # Ramp up
+    - [0.6, 0.6]    # Midpoint challenge
+    - [0.8, 0.85]   # Hard sections
+    - [1.0, 1.0]    # Boss at full difficulty
+
+themes:
+  - crypt
+  - fungal
+  - arcane
+
+keys:
+  - name: bronze
+    count: 3
+  - name: silver
+    count: 2
+  - name: gold
+    count: 1
+
+constraints:
+  - kind: connectivity
+    severity: hard
+    expr: isConnected()
+    priority: 100
+  - kind: keylock
+    severity: hard
+    expr: keyBeforeLock('bronze')
+    priority: 90
+  - kind: keylock
+    severity: hard
+    expr: keyBeforeLock('silver')
+    priority: 90
+  - kind: keylock
+    severity: hard
+    expr: keyBeforeLock('gold')
+    priority: 90
+  - kind: pacing
+    severity: soft
+    expr: monotoneIncrease(start, boss)
+    priority: 50
+
+allowDisconnected: true   # Allow teleporter rooms
+secretDensity: 0.25
+optionalRatio: 0.35

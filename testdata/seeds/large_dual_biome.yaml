@@ -1,0 +1,38 @@
+seed: 55555
+size:
+  roomsMin: 80
+  roomsMax: 120
+branching:
+  avg: 2.0
+  max: 5
+pacing:
+  curve: "S_CURVE"
+  variance: 0.20
+themes:
+  - crypt
+  - fungal
+keys:
+  - name: bronze
+    count: 3
+  - name: silver
+    count: 2
+  - name: gold
+    count: 1
+secretDensity: 0.20
+optionalRatio: 0.30
+constraints:
+  - kind: Connectivity
+    severity: Hard
+    expr: "isConnected()"
+  - kind: KeyLock
+    severity: Hard
+    expr: "keyBeforeLock('bronze')"
+  - kind: KeyLock
+    severity: Hard
+    expr: "keyBeforeLock('silver')"
+  - kind: KeyLock
+    severity: Hard
+    expr: "keyBeforeLock('gold')"
+  - kind: ThemeBalance
+    severity: Soft
+    expr: "themeBalance(['crypt', 'fungal'], 0.4, 0.6)"
