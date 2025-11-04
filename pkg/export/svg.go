@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"math"
+	"os"
+	"sort"
 
 	svg "github.com/ajstarks/svgo"
 	"github.com/dshills/dungo/pkg/dungeon"
@@ -110,6 +112,16 @@ func ExportSVG(artifact *dungeon.Artifact, opts SVGOptions) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// SaveSVGToFile generates an SVG visualization and saves it to a file.
+// The file is created with 0644 permissions (readable by all, writable by owner).
+func SaveSVGToFile(artifact *dungeon.Artifact, filepath string, opts SVGOptions) error {
+	data, err := ExportSVG(artifact, opts)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath, data, 0644)
+}
+
 // position represents a 2D coordinate.
 type position struct {
 	X, Y float64
@@ -134,6 +146,7 @@ func calculateLayout(g *graph.Graph, opts SVGOptions) map[string]position {
 	for id := range g.Rooms {
 		roomIDs = append(roomIDs, id)
 	}
+	sort.Strings(roomIDs)
 
 	// Center point
 	centerX := float64(opts.Width) / 2
@@ -157,7 +170,15 @@ func calculateLayout(g *graph.Graph, opts SVGOptions) map[string]position {
 
 // drawEdges renders all connectors as lines between rooms.
 func drawEdges(canvas *svg.SVG, g *graph.Graph, positions map[string]position, opts SVGOptions) {
-	for _, conn := range g.Connectors {
+	// Sort connector IDs for deterministic output
+	connectorIDs := make([]string, 0, len(g.Connectors))
+	for id := range g.Connectors {
+		connectorIDs = append(connectorIDs, id)
+	}
+	sort.Strings(connectorIDs)
+
+	for _, connID := range connectorIDs {
+		conn := g.Connectors[connID]
 		fromPos, fromOK := positions[conn.From]
 		toPos, toOK := positions[conn.To]
 
@@ -269,7 +290,15 @@ func drawGate(canvas *svg.SVG, x, y float64, gate *graph.Gate, opts SVGOptions) 
 
 // drawNodes renders all rooms as colored circles.
 func drawNodes(canvas *svg.SVG, g *graph.Graph, positions map[string]position, opts SVGOptions) {
-	for id, room := range g.Rooms {
+	// Sort room IDs for deterministic output
+	roomIDs := make([]string, 0, len(g.Rooms))
+	for id := range g.Rooms {
+		roomIDs = append(roomIDs, id)
+	}
+	sort.Strings(roomIDs)
+
+	for _, id := range roomIDs {
+		room := g.Rooms[id]
 		pos, ok := positions[id]
 		if !ok {
 			continue
@@ -353,7 +382,15 @@ func getNodeRadius(size graph.RoomSize, baseRadius int) int {
 
 // drawLabels renders room ID labels near each node.
 func drawLabels(canvas *svg.SVG, g *graph.Graph, positions map[string]position, opts SVGOptions) {
-	for id, room := range g.Rooms {
+	// Sort room IDs for deterministic output
+	roomIDs := make([]string, 0, len(g.Rooms))
+	for id := range g.Rooms {
+		roomIDs = append(roomIDs, id)
+	}
+	sort.Strings(roomIDs)
+
+	for _, id := range roomIDs {
+		room := g.Rooms[id]
 		pos, ok := positions[id]
 		if !ok {
 			continue
@@ -373,7 +410,15 @@ func drawLabels(canvas *svg.SVG, g *graph.Graph, positions map[string]position, 
 
 // drawHeatmap renders a difficulty heatmap overlay on nodes.
 func drawHeatmap(canvas *svg.SVG, g *graph.Graph, positions map[string]position, opts SVGOptions) {
-	for id, room := range g.Rooms {
+	// Sort room IDs for deterministic output
+	roomIDs := make([]string, 0, len(g.Rooms))
+	for id := range g.Rooms {
+		roomIDs = append(roomIDs, id)
+	}
+	sort.Strings(roomIDs)
+
+	for _, id := range roomIDs {
+		room := g.Rooms[id]
 		pos, ok := positions[id]
 		if !ok {
 			continue

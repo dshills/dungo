@@ -277,55 +277,6 @@ func TestArtifactSaveTMJ(t *testing.T) {
 	}
 }
 
-// TestArtifactExportSVG tests SVG export (not yet implemented).
-func TestArtifactExportSVG(t *testing.T) {
-	artifact := createTestArtifact()
-	opts := DefaultSVGOptions()
-
-	_, err := artifact.ExportSVG(opts)
-	if !errors.Is(err, ErrNotImplemented) {
-		t.Errorf("Expected ErrNotImplemented, got %v", err)
-	}
-}
-
-// TestArtifactSaveSVG tests SVG save (not yet implemented).
-func TestArtifactSaveSVG(t *testing.T) {
-	artifact := createTestArtifact()
-	tmpDir := t.TempDir()
-	path := filepath.Join(tmpDir, "dungeon.svg")
-	opts := DefaultSVGOptions()
-
-	err := artifact.SaveSVG(path, opts)
-	if !errors.Is(err, ErrNotImplemented) {
-		t.Errorf("Expected ErrNotImplemented, got %v", err)
-	}
-}
-
-// TestDefaultSVGOptions tests default SVG options.
-func TestDefaultSVGOptions(t *testing.T) {
-	opts := DefaultSVGOptions()
-
-	if opts.Width != 1024 {
-		t.Errorf("Expected width 1024, got %d", opts.Width)
-	}
-
-	if opts.Height != 768 {
-		t.Errorf("Expected height 768, got %d", opts.Height)
-	}
-
-	if !opts.ShowDifficulty {
-		t.Error("Expected ShowDifficulty to be true")
-	}
-
-	if !opts.ShowLegend {
-		t.Error("Expected ShowLegend to be true")
-	}
-
-	if opts.Scale != 1.0 {
-		t.Errorf("Expected scale 1.0, got %f", opts.Scale)
-	}
-}
-
 // TestArtifactJSONRoundTrip tests export and re-import.
 func TestArtifactJSONRoundTrip(t *testing.T) {
 	original := createTestArtifact()

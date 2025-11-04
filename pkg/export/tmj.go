@@ -207,11 +207,15 @@ func (m *TMJMap) AddTileset(name, imagePath string, tileWidth, tileHeight, tileC
 		firstGID = last.FirstGID + uint32(last.TileCount)
 	}
 
-	imageWidth := columns * tileWidth
-	imageHeight := (tileCount / columns) * tileHeight
-	if tileCount%columns != 0 {
-		imageHeight += tileHeight
+	// Validate columns to prevent divide-by-zero
+	if columns <= 0 {
+		columns = 1
 	}
+
+	imageWidth := columns * tileWidth
+	// Use proper rounding for row calculation
+	rows := (tileCount + columns - 1) / columns
+	imageHeight := rows * tileHeight
 
 	tileset := TMJTileset{
 		FirstGID:    firstGID,

@@ -16,20 +16,20 @@ func TestJSONRoundTrip(t *testing.T) {
 	// Generate a small test dungeon
 	cfg := &dungeon.Config{
 		Seed: 12345,
-		Size: dungeon.SizeConfig{
+		Size: dungeon.SizeCfg{
 			RoomsMin: 5,
 			RoomsMax: 8,
 		},
-		Branching: dungeon.BranchingConfig{
+		Branching: dungeon.BranchingCfg{
 			Avg: 1.5,
 			Max: 3,
 		},
 		SecretDensity: 0.2,
 		OptionalRatio: 0.3,
-		Keys: []dungeon.KeyConfig{
+		Keys: []dungeon.KeyCfg{
 			{Name: "bronze_key", Count: 1},
 		},
-		Pacing: dungeon.PacingConfig{
+		Pacing: dungeon.PacingCfg{
 			Curve:    dungeon.PacingLinear,
 			Variance: 0.1,
 		},
@@ -149,17 +149,17 @@ func TestJSONRoundTrip(t *testing.T) {
 func TestJSONCompactRoundTrip(t *testing.T) {
 	cfg := &dungeon.Config{
 		Seed: 99999,
-		Size: dungeon.SizeConfig{
+		Size: dungeon.SizeCfg{
 			RoomsMin: 3,
 			RoomsMax: 5,
 		},
-		Branching: dungeon.BranchingConfig{
+		Branching: dungeon.BranchingCfg{
 			Avg: 1.2,
 			Max: 2,
 		},
 		SecretDensity: 0.1,
 		OptionalRatio: 0.2,
-		Pacing: dungeon.PacingConfig{
+		Pacing: dungeon.PacingCfg{
 			Curve:    dungeon.PacingLinear,
 			Variance: 0.05,
 		},
@@ -212,15 +212,15 @@ func TestJSONCompactRoundTrip(t *testing.T) {
 func TestJSONExportDeterminism(t *testing.T) {
 	cfg := &dungeon.Config{
 		Seed: 42424242,
-		Size: dungeon.SizeConfig{
+		Size: dungeon.SizeCfg{
 			RoomsMin: 4,
 			RoomsMax: 6,
 		},
-		Branching: dungeon.BranchingConfig{
+		Branching: dungeon.BranchingCfg{
 			Avg: 1.3,
 			Max: 2,
 		},
-		Pacing: dungeon.PacingConfig{
+		Pacing: dungeon.PacingCfg{
 			Curve:    dungeon.PacingLinear,
 			Variance: 0.1,
 		},
