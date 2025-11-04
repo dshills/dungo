@@ -124,6 +124,12 @@ func (g *DefaultGenerator) Generate(ctx context.Context, cfg *Config) (*Artifact
 		SecretDensity: cfg.SecretDensity,
 		OptionalRatio: cfg.OptionalRatio,
 		Keys:          make([]synthesis.KeyConfig, len(cfg.Keys)),
+		Pacing: synthesis.PacingConfig{
+			Curve:        string(cfg.Pacing.Curve),
+			Variance:     cfg.Pacing.Variance,
+			CustomPoints: cfg.Pacing.CustomPoints,
+		},
+		Themes: cfg.Themes,
 	}
 	for i, k := range cfg.Keys {
 		synthesisCfg.Keys[i] = synthesis.KeyConfig{

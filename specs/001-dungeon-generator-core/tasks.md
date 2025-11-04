@@ -160,25 +160,25 @@
 
 > **CRITICAL: Write these tests FIRST, ensure they FAIL before implementation (Test-Driven Development)**
 
-- [ ] T077 [P] [US2] Property test for pacing curve adherence in pkg/synthesis/synthesis_test.go
-- [ ] T078 [P] [US2] Property test for branching factor bounds in pkg/graph/graph_test.go
-- [ ] T079 [P] [US2] Unit test for S-curve difficulty distribution in pkg/synthesis/pacing_test.go
-- [ ] T080 [P] [US2] Unit test for theme assignment and clustering in pkg/synthesis/themes_test.go
-- [ ] T081 [US2] Golden test for different pacing curves produce distinct difficulty distributions in pkg/dungeon/dungeon_test.go
+- [x] T077 [P] [US2] Property test for pacing curve adherence in pkg/synthesis/synthesis_test.go
+- [x] T078 [P] [US2] Property test for branching factor bounds in pkg/graph/graph_test.go
+- [x] T079 [P] [US2] Unit test for S-curve difficulty distribution in pkg/synthesis/pacing_test.go
+- [x] T080 [P] [US2] Unit test for theme assignment and clustering in pkg/synthesis/themes_test.go
+- [x] T081 [US2] Golden test for different pacing curves produce distinct difficulty distributions in pkg/dungeon/dungeon_test.go
 
 ### Implementation for User Story 2
 
-- [ ] T082 [P] [US2] Implement pacing curve calculators (LINEAR, S_CURVE, EXPONENTIAL) in pkg/synthesis/pacing.go
-- [ ] T083 [P] [US2] Implement custom pacing curve from points in pkg/synthesis/pacing.go
-- [ ] T084 [US2] Add difficulty assignment to rooms based on pacing curve in pkg/synthesis/grammar.go
-- [ ] T085 [US2] Implement branching factor control in grammar rules in pkg/synthesis/grammar.go
-- [ ] T086 [US2] Implement theme assignment with clustering in pkg/synthesis/themes.go
-- [ ] T087 [US2] Add multi-theme support with smooth transitions in pkg/synthesis/themes.go
-- [ ] T088 [US2] Add variance tolerance to pacing curve in pkg/synthesis/pacing.go
-- [ ] T089 [US2] Write unit tests for pacing module in pkg/synthesis/pacing_test.go
-- [ ] T090 [US2] Write unit tests for theme clustering in pkg/synthesis/themes_test.go
-- [ ] T091 [US2] Update soft constraint validation for pacing deviation in pkg/validation/constraints.go
-- [ ] T092 [US2] Run quality gates (golangci-lint run, go test ./...)
+- [x] T082 [P] [US2] Implement pacing curve calculators (LINEAR, S_CURVE, EXPONENTIAL) in pkg/synthesis/pacing.go
+- [x] T083 [P] [US2] Implement custom pacing curve from points in pkg/synthesis/pacing.go
+- [x] T084 [US2] Add difficulty assignment to rooms based on pacing curve in pkg/synthesis/grammar.go
+- [x] T085 [US2] Implement branching factor control in grammar rules in pkg/synthesis/grammar.go
+- [x] T086 [US2] Implement theme assignment with clustering in pkg/synthesis/themes.go
+- [x] T087 [US2] Add multi-theme support with smooth transitions in pkg/synthesis/themes.go
+- [x] T088 [US2] Add variance tolerance to pacing curve in pkg/synthesis/pacing.go
+- [x] T089 [US2] Write unit tests for pacing module in pkg/synthesis/pacing_test.go
+- [x] T090 [US2] Write unit tests for theme clustering in pkg/synthesis/themes_test.go
+- [x] T091 [US2] Update soft constraint validation for pacing deviation in pkg/validation/constraints.go
+- [x] T092 [US2] Run quality gates (golangci-lint run, go test ./...)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 work independently - deterministic generation with configurable characteristics
 

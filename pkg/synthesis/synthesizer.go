@@ -20,6 +20,15 @@ type Config struct {
 	SecretDensity float64
 	OptionalRatio float64
 	Keys          []KeyConfig
+	Pacing        PacingConfig // Difficulty curve configuration
+	Themes        []string     // Theme names for biome assignment
+}
+
+// PacingConfig defines the difficulty curve for the dungeon.
+type PacingConfig struct {
+	Curve        string       // LINEAR, S_CURVE, EXPONENTIAL, or CUSTOM
+	Variance     float64      // Random variance (0.0-0.3)
+	CustomPoints [][2]float64 // For CUSTOM curve
 }
 
 // KeyConfig defines a key/lock configuration.

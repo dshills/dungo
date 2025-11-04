@@ -82,7 +82,17 @@ func (s *GrammarSynthesizer) tryGenerate(ctx context.Context, rng *rng.RNG, cfg 
 		return nil, fmt.Errorf("expanding graph: %w", err)
 	}
 
-	// Step 3: Validate hard constraints
+	// Step 3: Assign difficulty based on pacing curve
+	if err := s.assignDifficulty(g, rng, cfg); err != nil {
+		return nil, fmt.Errorf("assigning difficulty: %w", err)
+	}
+
+	// Step 4: Assign themes to rooms
+	if err := assignThemes(g, cfg.Themes, rng); err != nil {
+		return nil, fmt.Errorf("assigning themes: %w", err)
+	}
+
+	// Step 5: Validate hard constraints
 	if err := s.validateHardConstraints(g, cfg); err != nil {
 		return nil, fmt.Errorf("constraint validation failed: %w", err)
 	}
@@ -646,6 +656,162 @@ func (s *GrammarSynthesizer) pickConnectorType(rng *rng.RNG) graph.ConnectorType
 // init registers the grammar synthesizer on package load.
 func init() {
 	Register("grammar", NewGrammarSynthesizer())
+}
+
+// assignDifficulty assigns difficulty values to all rooms based on the pacing curve.
+// Rooms on the critical path (Start → Boss) get difficulties based on their progress (0.0-1.0).
+// Optional/side rooms get slightly varied difficulties to add interest.
+func (s *GrammarSynthesizer) assignDifficulty(g *graph.Graph, rng *rng.RNG, cfg *Config) error {
+	// Find Start and Boss rooms
+	var startRoom, bossRoom *graph.Room
+	for _, room := range g.Rooms {
+		if room.Archetype == graph.ArchetypeStart {
+			startRoom = room
+		} else if room.Archetype == graph.ArchetypeBoss {
+			bossRoom = room
+		}
+	}
+
+	if startRoom == nil || bossRoom == nil {
+		return fmt.Errorf("missing Start or Boss room for difficulty assignment")
+	}
+
+	// Get the critical path from Start to Boss
+	criticalPath, err := g.GetPath(startRoom.ID, bossRoom.ID)
+	if err != nil {
+		return fmt.Errorf("no path from Start to Boss: %w", err)
+	}
+
+	// Create pacing curve from config
+	curve, err := s.createPacingCurve(cfg.Pacing)
+	if err != nil {
+		return fmt.Errorf("creating pacing curve: %w", err)
+	}
+
+	// Build progress map for critical path rooms
+	progressMap := make(map[string]float64)
+	for i, roomID := range criticalPath {
+		// Progress: 0.0 at start, 1.0 at boss
+		progress := 0.0
+		if len(criticalPath) > 1 {
+			progress = float64(i) / float64(len(criticalPath)-1)
+		}
+		progressMap[roomID] = progress
+	}
+
+	// Assign difficulty to all rooms
+	for roomID, room := range g.Rooms {
+		var difficulty float64
+
+		if progress, onPath := progressMap[roomID]; onPath {
+			// Room is on critical path: use pacing curve with variance
+			difficulty = EvaluateWithVariance(curve, progress, cfg.Pacing.Variance, rng)
+		} else {
+			// Room is optional/side room: interpolate from nearest path rooms
+			difficulty = s.interpolateOffPathDifficulty(g, roomID, progressMap, curve, cfg.Pacing.Variance, rng)
+		}
+
+		// Apply difficulty to room
+		room.Difficulty = difficulty
+
+		// Also scale reward based on difficulty (higher difficulty = higher reward potential)
+		// But add some randomness so not all hard rooms have high rewards
+		baseReward := difficulty * 0.7 // Base: 70% of difficulty
+		randomBonus := rng.Float64() * 0.3
+		room.Reward = baseReward + randomBonus
+		if room.Reward > 1.0 {
+			room.Reward = 1.0
+		}
+	}
+
+	return nil
+}
+
+// createPacingCurve creates a PacingCurve from synthesis config.
+func (s *GrammarSynthesizer) createPacingCurve(cfg PacingConfig) (PacingCurve, error) {
+	switch cfg.Curve {
+	case "LINEAR":
+		return &LinearCurve{}, nil
+	case "S_CURVE":
+		return NewSCurve(), nil
+	case "EXPONENTIAL":
+		return NewExponentialCurve(), nil
+	case "CUSTOM":
+		return NewCustomCurve(cfg.CustomPoints)
+	default:
+		// Default to linear if unspecified
+		return &LinearCurve{}, nil
+	}
+}
+
+// interpolateOffPathDifficulty computes difficulty for rooms not on the critical path.
+// Uses nearest neighbors on the path to interpolate a reasonable difficulty.
+func (s *GrammarSynthesizer) interpolateOffPathDifficulty(
+	g *graph.Graph,
+	roomID string,
+	progressMap map[string]float64,
+	curve PacingCurve,
+	variance float64,
+	rng *rng.RNG,
+) float64 {
+	// Find neighboring rooms that are on the path
+	neighbors := g.Adjacency[roomID]
+	pathNeighbors := make([]float64, 0)
+
+	for _, neighborID := range neighbors {
+		if progress, onPath := progressMap[neighborID]; onPath {
+			pathNeighbors = append(pathNeighbors, progress)
+		}
+	}
+
+	// If no path neighbors, do a BFS to find nearest path room
+	if len(pathNeighbors) == 0 {
+		nearestProgress := s.findNearestPathRoom(g, roomID, progressMap)
+		if nearestProgress >= 0 {
+			pathNeighbors = append(pathNeighbors, nearestProgress)
+		}
+	}
+
+	// Compute average progress from path neighbors
+	avgProgress := 0.5 // Default to middle if no path neighbors found
+	if len(pathNeighbors) > 0 {
+		sum := 0.0
+		for _, p := range pathNeighbors {
+			sum += p
+		}
+		avgProgress = sum / float64(len(pathNeighbors))
+	}
+
+	// Apply pacing curve with variance
+	return EvaluateWithVariance(curve, avgProgress, variance, rng)
+}
+
+// findNearestPathRoom finds the progress value of the nearest room on the critical path.
+// Uses BFS to find the closest path room. Returns -1.0 if no path room found.
+func (s *GrammarSynthesizer) findNearestPathRoom(g *graph.Graph, startID string, progressMap map[string]float64) float64 {
+	visited := make(map[string]bool)
+	queue := []string{startID}
+	visited[startID] = true
+
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+
+		// Check if this room is on the path
+		if progress, onPath := progressMap[current]; onPath {
+			return progress
+		}
+
+		// Add neighbors to queue
+		for _, neighborID := range g.Adjacency[current] {
+			if !visited[neighborID] {
+				visited[neighborID] = true
+				queue = append(queue, neighborID)
+			}
+		}
+	}
+
+	return -1.0 // Not found
 }
 
 // min returns the minimum of two integers.

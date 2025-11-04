@@ -323,3 +323,418 @@ func marshalArtifact(a *dungeon.Artifact) ([]byte, error) {
 	// when the test actually runs
 	return nil, nil
 }
+
+// =============================================================================
+// TDD RED PHASE TESTS - T081: Golden tests for pacing curves
+// =============================================================================
+
+// TestGolden_LinearPacingCurve verifies that LINEAR pacing produces
+// uniform difficulty distribution in generated dungeons.
+// TDD RED PHASE: Will FAIL until pacing implementation is complete.
+func TestGolden_LinearPacingCurve(t *testing.T) {
+	cfg := &Config{
+		Seed: 1000,
+		Size: SizeCfg{
+			RoomsMin: 25,
+			RoomsMax: 25,
+		},
+		Branching: BranchingCfg{
+			Avg: 2.0,
+			Max: 4,
+		},
+		Pacing: PacingCfg{
+			Curve:    PacingLinear,
+			Variance: 0.1,
+		},
+		Themes:        []string{"dungeon"},
+		SecretDensity: 0.1,
+		OptionalRatio: 0.2,
+	}
+
+	gen := NewGenerator()
+	artifact, err := gen.Generate(context.Background(), cfg)
+
+	if err != nil {
+		t.Fatalf("Generate() failed: %v", err)
+	}
+
+	if artifact.ADG == nil {
+		t.Fatal("Artifact missing ADG")
+	}
+
+	// Find critical path (Start -> Boss)
+	var startID, bossID string
+	for id, room := range artifact.ADG.Rooms {
+		if room.Archetype == ArchetypeStart {
+			startID = id
+		}
+		if room.Archetype == ArchetypeBoss {
+			bossID = id
+		}
+	}
+
+	path, err := artifact.ADG.GetPath(startID, bossID)
+	if err != nil {
+		t.Fatalf("No path from Start to Boss: %v", err)
+	}
+
+	// Extract difficulty distribution along critical path
+	difficulties := extractDifficultyDistribution(artifact.ADG, path)
+
+	// Verify LINEAR pacing characteristics
+	// Property: Difficulty should increase roughly uniformly
+	for i := 1; i < len(difficulties); i++ {
+		// Allow some variance but should generally increase
+		if difficulties[i] < difficulties[i-1]-0.15 {
+			t.Errorf("Linear pacing violated at position %d: difficulty decreased from %.2f to %.2f",
+				i, difficulties[i-1], difficulties[i])
+		}
+	}
+
+	// Calculate slope variations
+	slopes := calculateSlopes(difficulties)
+	avgSlope := average(slopes)
+	maxSlopeDeviation := maxDeviation(slopes, avgSlope)
+
+	// Property: Linear should have relatively consistent slope
+	if maxSlopeDeviation > 0.3 {
+		t.Errorf("Linear pacing slope too variable: max deviation %.2f > 0.3", maxSlopeDeviation)
+	}
+
+	t.Logf("✓ LINEAR pacing: path length=%d, avg slope=%.3f, max deviation=%.3f",
+		len(path), avgSlope, maxSlopeDeviation)
+	t.Logf("  Difficulty distribution: %v", formatDifficulties(difficulties))
+}
+
+// TestGolden_SCurvePacingCurve verifies that S_CURVE pacing produces
+// smooth acceleration and deceleration.
+// TDD RED PHASE: Will FAIL until pacing implementation is complete.
+func TestGolden_SCurvePacingCurve(t *testing.T) {
+	cfg := &Config{
+		Seed: 2000,
+		Size: SizeCfg{
+			RoomsMin: 30,
+			RoomsMax: 30,
+		},
+		Branching: BranchingCfg{
+			Avg: 2.0,
+			Max: 4,
+		},
+		Pacing: PacingCfg{
+			Curve:    PacingSCurve,
+			Variance: 0.1,
+		},
+		Themes:        []string{"crypt"},
+		SecretDensity: 0.1,
+		OptionalRatio: 0.2,
+	}
+
+	gen := NewGenerator()
+	artifact, err := gen.Generate(context.Background(), cfg)
+
+	if err != nil {
+		t.Fatalf("Generate() failed: %v", err)
+	}
+
+	if artifact.ADG == nil {
+		t.Fatal("Artifact missing ADG")
+	}
+
+	// Find critical path
+	var startID, bossID string
+	for id, room := range artifact.ADG.Rooms {
+		if room.Archetype == ArchetypeStart {
+			startID = id
+		}
+		if room.Archetype == ArchetypeBoss {
+			bossID = id
+		}
+	}
+
+	path, err := artifact.ADG.GetPath(startID, bossID)
+	if err != nil {
+		t.Fatalf("No path from Start to Boss: %v", err)
+	}
+
+	difficulties := extractDifficultyDistribution(artifact.ADG, path)
+	slopes := calculateSlopes(difficulties)
+
+	// Property: S-curve should have low slope at start
+	earlySlopes := slopes[:len(slopes)/3]
+	avgEarlySlope := average(earlySlopes)
+
+	// Property: S-curve should have high slope in middle
+	midSlopes := slopes[len(slopes)/3 : 2*len(slopes)/3]
+	avgMidSlope := average(midSlopes)
+
+	// Property: S-curve should have low slope at end
+	lateSlopes := slopes[2*len(slopes)/3:]
+	avgLateSlope := average(lateSlopes)
+
+	// Verify acceleration pattern: early < mid > late
+	if avgMidSlope <= avgEarlySlope || avgMidSlope <= avgLateSlope {
+		t.Errorf("S-curve acceleration pattern incorrect: early=%.3f, mid=%.3f, late=%.3f",
+			avgEarlySlope, avgMidSlope, avgLateSlope)
+	}
+
+	t.Logf("✓ S_CURVE pacing: path length=%d", len(path))
+	t.Logf("  Slopes: early=%.3f, mid=%.3f, late=%.3f (mid should be highest)",
+		avgEarlySlope, avgMidSlope, avgLateSlope)
+	t.Logf("  Difficulty distribution: %v", formatDifficulties(difficulties))
+}
+
+// TestGolden_ExponentialPacingCurve verifies that EXPONENTIAL pacing produces
+// rapid difficulty increase toward the end.
+// TDD RED PHASE: Will FAIL until pacing implementation is complete.
+func TestGolden_ExponentialPacingCurve(t *testing.T) {
+	cfg := &Config{
+		Seed: 3000,
+		Size: SizeCfg{
+			RoomsMin: 25,
+			RoomsMax: 25,
+		},
+		Branching: BranchingCfg{
+			Avg: 2.0,
+			Max: 4,
+		},
+		Pacing: PacingCfg{
+			Curve:    PacingExponential,
+			Variance: 0.1,
+		},
+		Themes:        []string{"cave"},
+		SecretDensity: 0.1,
+		OptionalRatio: 0.2,
+	}
+
+	gen := NewGenerator()
+	artifact, err := gen.Generate(context.Background(), cfg)
+
+	if err != nil {
+		t.Fatalf("Generate() failed: %v", err)
+	}
+
+	if artifact.ADG == nil {
+		t.Fatal("Artifact missing ADG")
+	}
+
+	// Find critical path
+	var startID, bossID string
+	for id, room := range artifact.ADG.Rooms {
+		if room.Archetype == ArchetypeStart {
+			startID = id
+		}
+		if room.Archetype == ArchetypeBoss {
+			bossID = id
+		}
+	}
+
+	path, err := artifact.ADG.GetPath(startID, bossID)
+	if err != nil {
+		t.Fatalf("No path from Start to Boss: %v", err)
+	}
+
+	difficulties := extractDifficultyDistribution(artifact.ADG, path)
+	slopes := calculateSlopes(difficulties)
+
+	// Property: Exponential should have increasing slopes (acceleration)
+	earlySlopes := slopes[:len(slopes)/2]
+	lateSlopes := slopes[len(slopes)/2:]
+
+	avgEarlySlope := average(earlySlopes)
+	avgLateSlope := average(lateSlopes)
+
+	// Property: Late slopes should be significantly higher than early slopes
+	if avgLateSlope <= avgEarlySlope {
+		t.Errorf("Exponential pacing not accelerating: early slope %.3f >= late slope %.3f",
+			avgEarlySlope, avgLateSlope)
+	}
+
+	accelerationRatio := avgLateSlope / avgEarlySlope
+	if accelerationRatio < 1.5 {
+		t.Errorf("Exponential acceleration too weak: ratio %.2f < 1.5", accelerationRatio)
+	}
+
+	t.Logf("✓ EXPONENTIAL pacing: path length=%d", len(path))
+	t.Logf("  Acceleration: early slope=%.3f, late slope=%.3f, ratio=%.2fx",
+		avgEarlySlope, avgLateSlope, accelerationRatio)
+	t.Logf("  Difficulty distribution: %v", formatDifficulties(difficulties))
+}
+
+// TestGolden_PacingCurveComparison verifies that different curves
+// produce measurably different difficulty distributions.
+// TDD RED PHASE: Will FAIL until pacing implementation is complete.
+func TestGolden_PacingCurveComparison(t *testing.T) {
+	baseCfg := Config{
+		Seed: 4000,
+		Size: SizeCfg{
+			RoomsMin: 30,
+			RoomsMax: 30,
+		},
+		Branching: BranchingCfg{
+			Avg: 2.0,
+			Max: 4,
+		},
+		Themes:        []string{"dungeon"},
+		SecretDensity: 0.1,
+		OptionalRatio: 0.2,
+	}
+
+	curves := []struct {
+		name  string
+		curve PacingCurve
+	}{
+		{"LINEAR", PacingLinear},
+		{"S_CURVE", PacingSCurve},
+		{"EXPONENTIAL", PacingExponential},
+	}
+
+	distributions := make(map[string][]float64)
+
+	gen := NewGenerator()
+
+	for _, tc := range curves {
+		cfg := baseCfg
+		cfg.Pacing = PacingCfg{
+			Curve:    tc.curve,
+			Variance: 0.1,
+		}
+
+		artifact, err := gen.Generate(context.Background(), &cfg)
+		if err != nil {
+			t.Fatalf("Generate() with %s failed: %v", tc.name, err)
+		}
+
+		if artifact.ADG == nil {
+			t.Fatalf("%s: Artifact missing ADG", tc.name)
+		}
+
+		// Extract difficulty distribution
+		var startID, bossID string
+		for id, room := range artifact.ADG.Rooms {
+			if room.Archetype == ArchetypeStart {
+				startID = id
+			}
+			if room.Archetype == ArchetypeBoss {
+				bossID = id
+			}
+		}
+
+		path, err := artifact.ADG.GetPath(startID, bossID)
+		if err != nil {
+			t.Fatalf("%s: No path from Start to Boss: %v", tc.name, err)
+		}
+
+		distributions[tc.name] = extractDifficultyDistribution(artifact.ADG, path)
+		t.Logf("%s distribution: %v", tc.name, formatDifficulties(distributions[tc.name]))
+	}
+
+	// Property: Curves should produce distinct distributions
+	// Compare distributions at midpoint
+	midIndex := len(distributions["LINEAR"]) / 2
+
+	linearMid := distributions["LINEAR"][midIndex]
+	scurveMid := distributions["S_CURVE"][midIndex]
+	expMid := distributions["EXPONENTIAL"][midIndex]
+
+	// At midpoint, exponential should be lower than linear
+	if expMid >= linearMid-0.05 {
+		t.Errorf("Exponential and Linear too similar at midpoint: exp=%.2f, linear=%.2f",
+			expMid, linearMid)
+	}
+
+	// S-curve should be near linear at midpoint (inflection point)
+	if scurveMid < linearMid-0.15 || scurveMid > linearMid+0.15 {
+		t.Logf("Note: S-curve midpoint %.2f differs from linear %.2f (may indicate different steepness)",
+			scurveMid, linearMid)
+	}
+
+	t.Logf("✓ Pacing curves produce distinct distributions")
+	t.Logf("  Midpoint difficulties: LINEAR=%.2f, S_CURVE=%.2f, EXPONENTIAL=%.2f",
+		linearMid, scurveMid, expMid)
+}
+
+// =============================================================================
+// Test Helper Functions
+// =============================================================================
+
+// extractDifficultyDistribution extracts difficulty values along a path.
+func extractDifficultyDistribution(g *Graph, path []string) []float64 {
+	difficulties := make([]float64, len(path))
+	for i, roomID := range path {
+		difficulties[i] = g.Rooms[roomID].Difficulty
+	}
+	return difficulties
+}
+
+// calculateSlopes computes difficulty increase between consecutive rooms.
+func calculateSlopes(difficulties []float64) []float64 {
+	if len(difficulties) < 2 {
+		return []float64{}
+	}
+
+	slopes := make([]float64, len(difficulties)-1)
+	for i := 0; i < len(difficulties)-1; i++ {
+		slopes[i] = difficulties[i+1] - difficulties[i]
+	}
+	return slopes
+}
+
+// average calculates the mean of a slice of floats.
+func average(values []float64) float64 {
+	if len(values) == 0 {
+		return 0.0
+	}
+
+	sum := 0.0
+	for _, v := range values {
+		sum += v
+	}
+	return sum / float64(len(values))
+}
+
+// maxDeviation finds the maximum absolute deviation from a reference value.
+func maxDeviation(values []float64, reference float64) float64 {
+	maxDev := 0.0
+	for _, v := range values {
+		dev := v - reference
+		if dev < 0 {
+			dev = -dev
+		}
+		if dev > maxDev {
+			maxDev = dev
+		}
+	}
+	return maxDev
+}
+
+// formatDifficulties formats a difficulty distribution for logging.
+func formatDifficulties(difficulties []float64) string {
+	if len(difficulties) == 0 {
+		return "[]"
+	}
+
+	// Sample evenly across the distribution (show ~10 values)
+	step := len(difficulties) / 10
+	if step < 1 {
+		step = 1
+	}
+
+	result := "["
+	for i := 0; i < len(difficulties); i += step {
+		if i > 0 {
+			result += ", "
+		}
+		result += formatFloat(difficulties[i])
+	}
+	// Always include the last value
+	if (len(difficulties)-1)%step != 0 {
+		result += ", " + formatFloat(difficulties[len(difficulties)-1])
+	}
+	result += "]"
+	return result
+}
+
+// formatFloat formats a float to 2 decimal places.
+func formatFloat(v float64) string {
+	return fmt.Sprintf("%.2f", v)
+}

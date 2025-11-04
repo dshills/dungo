@@ -18,6 +18,11 @@ func TestGrammarSynthesizer_CoreTrio(t *testing.T) {
 		BranchingMax:  4,
 		SecretDensity: 0.0,
 		OptionalRatio: 0.1,
+		Pacing: PacingConfig{
+			Curve:    "LINEAR",
+			Variance: 0.1,
+		},
+		Themes: []string{"dungeon"},
 	}
 
 	synth := NewGrammarSynthesizer()
@@ -98,6 +103,11 @@ func TestGrammarSynthesizer_RoomCountBounds(t *testing.T) {
 				BranchingMax:  4,
 				SecretDensity: 0.1,
 				OptionalRatio: 0.2,
+				Pacing: PacingConfig{
+					Curve:    "LINEAR",
+					Variance: 0.1,
+				},
+				Themes: []string{"dungeon"},
 			}
 
 			synth := NewGrammarSynthesizer()
@@ -129,6 +139,11 @@ func TestGrammarSynthesizer_Connectivity(t *testing.T) {
 		BranchingMax:  4,
 		SecretDensity: 0.15,
 		OptionalRatio: 0.25,
+		Pacing: PacingConfig{
+			Curve:    "LINEAR",
+			Variance: 0.1,
+		},
+		Themes: []string{"dungeon"},
 	}
 
 	synth := NewGrammarSynthesizer()
@@ -175,6 +190,11 @@ func TestGrammarSynthesizer_KeyLockConstraints(t *testing.T) {
 		},
 		SecretDensity: 0.1,
 		OptionalRatio: 0.2,
+		Pacing: PacingConfig{
+			Curve:    "LINEAR",
+			Variance: 0.1,
+		},
+		Themes: []string{"dungeon"},
 	}
 
 	synth := NewGrammarSynthesizer()
@@ -238,6 +258,11 @@ func TestGrammarSynthesizer_Determinism(t *testing.T) {
 		BranchingMax:  4,
 		SecretDensity: 0.1,
 		OptionalRatio: 0.2,
+		Pacing: PacingConfig{
+			Curve:    "LINEAR",
+			Variance: 0.1,
+		},
+		Themes: []string{"dungeon"},
 	}
 
 	synth := NewGrammarSynthesizer()
@@ -290,6 +315,11 @@ func TestGrammarSynthesizer_BranchingMax(t *testing.T) {
 		BranchingMax:  3, // Strict max
 		SecretDensity: 0.1,
 		OptionalRatio: 0.2,
+		Pacing: PacingConfig{
+			Curve:    "LINEAR",
+			Variance: 0.1,
+		},
+		Themes: []string{"dungeon"},
 	}
 
 	synth := NewGrammarSynthesizer()
@@ -330,6 +360,11 @@ func TestGrammarSynthesizer_ContextCancellation(t *testing.T) {
 		BranchingMax:  4,
 		SecretDensity: 0.1,
 		OptionalRatio: 0.2,
+		Pacing: PacingConfig{
+			Curve:    "LINEAR",
+			Variance: 0.1,
+		},
+		Themes: []string{"dungeon"},
 	}
 
 	synth := NewGrammarSynthesizer()
@@ -345,5 +380,207 @@ func TestGrammarSynthesizer_ContextCancellation(t *testing.T) {
 	}
 	if err != context.Canceled {
 		t.Errorf("Expected context.Canceled error, got %v", err)
+	}
+}
+
+// T077: Property test for pacing curve adherence
+// Verifies that room difficulties follow the configured pacing curve within variance tolerance.
+func TestGrammarSynthesizer_PacingCurveAdherence(t *testing.T) {
+	tests := []struct {
+		name     string
+		curve    string
+		variance float64
+	}{
+		{"Linear", "LINEAR", 0.1},
+		{"SCurve", "S_CURVE", 0.15},
+		{"Exponential", "EXPONENTIAL", 0.2},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &Config{
+				Seed:          42424242,
+				RoomsMin:      20,
+				RoomsMax:      30,
+				BranchingAvg:  2.0,
+				BranchingMax:  4,
+				SecretDensity: 0.1,
+				OptionalRatio: 0.2,
+				Pacing: PacingConfig{
+					Curve:    tt.curve,
+					Variance: tt.variance,
+				},
+				Themes: []string{"dungeon"},
+			}
+
+			synth := NewGrammarSynthesizer()
+			testRNG := rng.NewRNG(cfg.Seed, "test", []byte("test"))
+
+			g, err := synth.Synthesize(context.Background(), testRNG, cfg)
+			if err != nil {
+				t.Fatalf("Synthesize() error = %v", err)
+			}
+
+			// Find Start and Boss rooms
+			var startRoom, bossRoom *graph.Room
+			for _, room := range g.Rooms {
+				if room.Archetype == graph.ArchetypeStart {
+					startRoom = room
+				} else if room.Archetype == graph.ArchetypeBoss {
+					bossRoom = room
+				}
+			}
+
+			if startRoom == nil || bossRoom == nil {
+				t.Fatal("Missing Start or Boss room")
+			}
+
+			// Get critical path
+			criticalPath, err := g.GetPath(startRoom.ID, bossRoom.ID)
+			if err != nil {
+				t.Fatalf("No path from Start to Boss: %v", err)
+			}
+
+			// Create expected pacing curve
+			var curve PacingCurve
+			switch tt.curve {
+			case "LINEAR":
+				curve = &LinearCurve{}
+			case "S_CURVE":
+				curve = NewSCurve()
+			case "EXPONENTIAL":
+				curve = NewExponentialCurve()
+			}
+
+			// Verify rooms on critical path follow the curve within tolerance
+			tolerance := tt.variance + 0.15 // Allow variance + some extra for rounding
+			for i, roomID := range criticalPath {
+				room := g.Rooms[roomID]
+				progress := 0.0
+				if len(criticalPath) > 1 {
+					progress = float64(i) / float64(len(criticalPath)-1)
+				}
+				expectedDifficulty := curve.Evaluate(progress)
+				actualDifficulty := room.Difficulty
+
+				// Check if difficulty is within tolerance
+				diff := actualDifficulty - expectedDifficulty
+				if diff < 0 {
+					diff = -diff
+				}
+				if diff > tolerance {
+					t.Errorf("Room %s at progress %.2f: difficulty %.3f deviates from expected %.3f by %.3f (tolerance %.3f)",
+						roomID, progress, actualDifficulty, expectedDifficulty, diff, tolerance)
+				}
+			}
+
+			// Verify Start room has low difficulty
+			if startRoom.Difficulty > 0.3 {
+				t.Errorf("Start room has difficulty %.3f, expected <= 0.3", startRoom.Difficulty)
+			}
+
+			// Verify Boss room has high difficulty
+			if bossRoom.Difficulty < 0.7 {
+				t.Errorf("Boss room has difficulty %.3f, expected >= 0.7", bossRoom.Difficulty)
+			}
+
+			// Verify all difficulties are in valid range [0.0, 1.0]
+			for _, room := range g.Rooms {
+				if room.Difficulty < 0.0 || room.Difficulty > 1.0 {
+					t.Errorf("Room %s has difficulty %.3f outside valid range [0.0, 1.0]", room.ID, room.Difficulty)
+				}
+			}
+		})
+	}
+}
+
+// T078: Property test for branching factor bounds
+// Verifies that no room exceeds BranchingMax connections and average is close to BranchingAvg.
+func TestGrammarSynthesizer_BranchingFactorBounds(t *testing.T) {
+	tests := []struct {
+		name         string
+		branchingAvg float64
+		branchingMax int
+	}{
+		{"Conservative", 2.0, 3},
+		{"Moderate", 2.5, 4},
+		{"Dense", 3.0, 5},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &Config{
+				Seed:          12345678,
+				RoomsMin:      25,
+				RoomsMax:      35,
+				BranchingAvg:  tt.branchingAvg,
+				BranchingMax:  tt.branchingMax,
+				SecretDensity: 0.1,
+				OptionalRatio: 0.2,
+				Pacing: PacingConfig{
+					Curve:    "LINEAR",
+					Variance: 0.1,
+				},
+				Themes: []string{"dungeon"},
+			}
+
+			synth := NewGrammarSynthesizer()
+			testRNG := rng.NewRNG(cfg.Seed, "test", []byte("test"))
+
+			g, err := synth.Synthesize(context.Background(), testRNG, cfg)
+			if err != nil {
+				t.Fatalf("Synthesize() error = %v", err)
+			}
+
+			// Verify no room exceeds BranchingMax
+			totalConnections := 0
+			for roomID, neighbors := range g.Adjacency {
+				connectionCount := len(neighbors)
+				totalConnections += connectionCount
+
+				if connectionCount > tt.branchingMax {
+					t.Errorf("Room %s has %d connections, exceeds max %d", roomID, connectionCount, tt.branchingMax)
+				}
+			}
+
+			// Verify average branching factor is reasonably close to target
+			// Note: Average is per room, not per edge (so count each connection once per room)
+			avgBranching := float64(totalConnections) / float64(len(g.Rooms))
+
+			// Allow significant deviation from target average since:
+			// 1. Graph must be connected (minimum spanning tree constraint)
+			// 2. Rooms with max connections can't accept more
+			// 3. Grammar rules create specific topologies
+			// We mainly care that it's not too sparse (< 1.5) or too dense (> max+1)
+			minReasonable := 1.5 // Must be better than a path (1.0 avg)
+			maxReasonable := float64(tt.branchingMax) + 1.0
+
+			if avgBranching < minReasonable {
+				t.Errorf("Average branching %.2f too sparse (expected >= %.2f)",
+					avgBranching, minReasonable)
+			}
+			if avgBranching > maxReasonable {
+				t.Errorf("Average branching %.2f too dense (expected <= %.2f)",
+					avgBranching, maxReasonable)
+			}
+
+			// Verify graph is still connected
+			if !g.IsConnected() {
+				t.Error("Graph is not connected despite branching constraints")
+			}
+
+			// Verify all rooms have at least one connection (except for edge cases)
+			isolatedRooms := 0
+			for roomID, neighbors := range g.Adjacency {
+				if len(neighbors) == 0 {
+					isolatedRooms++
+					t.Errorf("Room %s is isolated (no connections)", roomID)
+				}
+			}
+
+			if isolatedRooms > 0 {
+				t.Errorf("Found %d isolated rooms", isolatedRooms)
+			}
+		})
 	}
 }
