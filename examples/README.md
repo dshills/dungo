@@ -2,9 +2,63 @@
 
 This directory contains working examples demonstrating how to use the dungeon generator.
 
-## Available Examples
+## 🎮 Fun Game-Style Examples
 
-### 1. Text Rendering Example
+Three complete examples showcasing different dungeon generation styles:
+
+| Example | Style | Size | Difficulty | Run Command |
+|---------|-------|------|------------|-------------|
+| **01-zelda-dungeon** 🗝️ | Linear progression | 20-25 rooms | S-curve | `cd 01-zelda-dungeon && go run main.go` |
+| **02-metroidvania-maze** 🗺️ | Open exploration | 60-80 rooms | Linear | `cd 02-metroidvania-maze && go run main.go` |
+| **03-darksouls-challenge** ⚔️ | Brutal mid-game | 30-40 rooms | Custom | `cd 03-darksouls-challenge && go run main.go` |
+
+### 1. Classic Zelda-Style Dungeon 🗝️
+
+**Path**: `01-zelda-dungeon/`
+
+Traditional dungeon with key/lock progression, treasure rooms, and structured difficulty.
+
+**Features**:
+- 3 key types (small, big, boss)
+- S-curve pacing (easy → hard → fair boss)
+- 15% secret rooms, 20% optional content
+- Key-before-lock constraint enforcement
+
+**Perfect for**: Roguelikes, puzzle dungeons, structured campaigns
+
+### 2. Metroidvania-Style Labyrinth 🗺️
+
+**Path**: `02-metroidvania-maze/`
+
+Massive, interconnected dungeon with loops and multiple paths to every objective.
+
+**Features**:
+- 60-80 rooms (3x larger!)
+- High connectivity (2.8 avg connections/room)
+- 25% secret rooms, 35% optional content
+- Multiple viable routes to boss
+
+**Perfect for**: Exploration games, backtracking mechanics, speedruns
+
+### 3. Dark Souls Challenge Dungeon ⚔️
+
+**Path**: `03-darksouls-challenge/`
+
+Brutally difficult with custom curve that spikes at mid-game.
+
+**Features**:
+- Custom difficulty (20% → 85% → 75%)
+- Most content mandatory (85% critical path)
+- High variance (±25% unpredictability)
+- Strategic secret placement
+
+**Perfect for**: Challenge runs, permadeath, skill testing
+
+Each example generates `.json`, `.tmj` (Tiled), and `.svg` (visualization) files.
+
+## 🛠️ Technical Examples
+
+### 4. Text Rendering Example
 
 **Path**: `text-render/main.go`
 
@@ -23,7 +77,7 @@ go run examples/text-render/main.go
 - Key-lock relationships
 - Validation status
 
-### 2. Embedding Example
+### 5. Embedding Example
 
 **Path**: `embedding/main.go`
 
@@ -48,12 +102,29 @@ Example configurations are in the `configs/` directory:
 - `basic_dungeon.yaml` - Standard configuration
 - `custom_pacing.yaml` - Advanced pacing curve example
 
-## Running Examples
+## Quick Start
 
-All examples can be run directly with `go run`:
+**New users?** Start with the game-style examples to see the library in action:
 
 ```bash
-# Text rendering (recommended to start)
+# Classic Zelda-style dungeon (recommended first!)
+cd examples/01-zelda-dungeon
+go run main.go
+
+# Or use make from project root
+make run-zelda
+make run-metroidvania
+make run-darksouls
+
+# Or build binaries
+make examples
+./bin/zelda-dungeon -config examples/01-zelda-dungeon/config.yaml
+```
+
+**Technical exploration?** Try the rendering and embedding examples:
+
+```bash
+# Text rendering
 go run examples/text-render/main.go
 
 # Spatial embedding

@@ -1,0 +1,51 @@
+# Metroidvania-Style Labyrinth
+# Highly interconnected with multiple paths, loops, and backtracking
+
+seed: 0  # Auto-generate unique seed each run
+
+size:
+  roomsMin: 60
+  roomsMax: 80
+
+branching:
+  avg: 2.8      # High connectivity - lots of loops
+  max: 5        # Some hub rooms with many exits
+
+pacing:
+  curve: "LINEAR"
+  variance: 0.2   # More variable difficulty
+
+themes:
+  - fungal
+  - arcane
+
+# Multiple key types for different areas
+keys:
+  - name: "red_key"
+    count: 2
+  - name: "blue_key"
+    count: 2
+  - name: "yellow_key"
+    count: 1
+
+constraints:
+  - kind: "reachability"
+    severity: "hard"
+    expr: "keyBeforeLock(red_key)"
+    priority: 100
+  - kind: "reachability"
+    severity: "hard"
+    expr: "keyBeforeLock(blue_key)"
+    priority: 100
+  - kind: "reachability"
+    severity: "hard"
+    expr: "keyBeforeLock(yellow_key)"
+    priority: 100
+  # Encourage interconnected design
+  - kind: "topology"
+    severity: "soft"
+    expr: "cycleDensity > 0.4"
+    priority: 60
+
+secretDensity: 0.25    # 25% secret rooms - exploration is key!
+optionalRatio: 0.35    # 35% optional content

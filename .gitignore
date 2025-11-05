@@ -50,6 +50,9 @@ dungeon_*.svg
 
 # Generated example outputs
 examples/*/output/
+zelda_dungeon_*
+metroidvania_maze_*
+darksouls_challenge_*
 
 # IDE and editor files
 .DS_Store

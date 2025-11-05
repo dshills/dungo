@@ -1,0 +1,57 @@
+# Dark Souls Challenge Dungeon
+# Custom difficulty curve with brutal mid-game and punishing design
+
+seed: 666  # For the brave
+
+size:
+  roomsMin: 30
+  roomsMax: 40
+
+branching:
+  avg: 2.2      # Moderate branching
+  max: 4        # Some choice in routing
+
+pacing:
+  curve: "CUSTOM"
+  variance: 0.25  # High variance for unpredictability
+  # Custom difficulty curve: Easy start, BRUTAL middle, slightly easier boss
+  # [progress, difficulty] where 0.0 = start, 1.0 = boss
+  customPoints:
+    - [0.0, 0.2]    # Easy intro (20% difficulty)
+    - [0.2, 0.5]    # Ramp up fast
+    - [0.4, 0.85]   # Peak difficulty (85%!)
+    - [0.6, 0.9]    # Stay brutal
+    - [0.8, 0.8]    # Slight relief
+    - [1.0, 0.75]   # Boss is hard but not the hardest
+
+themes:
+  - crypt
+
+# Limited keys - have to find the right path
+keys:
+  - name: "iron_key"
+    count: 2
+  - name: "bone_key"
+    count: 1
+
+constraints:
+  - kind: "reachability"
+    severity: "hard"
+    expr: "keyBeforeLock(iron_key)"
+    priority: 100
+  - kind: "reachability"
+    severity: "hard"
+    expr: "keyBeforeLock(bone_key)"
+    priority: 100
+  # Enforce challenging structure
+  - kind: "structure"
+    severity: "soft"
+    expr: "pathLengthMin(15)"
+    priority: 80
+  - kind: "pacing"
+    severity: "soft"
+    expr: "peakDifficultyBefore(0.7)"
+    priority: 60
+
+secretDensity: 0.2     # Secrets offer respite
+optionalRatio: 0.15    # Most content is mandatory

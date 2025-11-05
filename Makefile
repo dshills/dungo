@@ -14,6 +14,14 @@ help:
 	@echo "  make build          - Build all packages"
 	@echo "  make examples       - Build all example programs"
 	@echo ""
+	@echo "Running Examples:"
+	@echo "  make run-zelda      - Generate Zelda-style dungeon (recommended first!)"
+	@echo "  make run-metroidvania - Generate Metroidvania-style maze"
+	@echo "  make run-darksouls  - Generate Dark Souls challenge dungeon"
+	@echo "  make run-all-games  - Run all game-style examples"
+	@echo "  make run-text-render - Run text rendering example"
+	@echo "  make run-embedding  - Run embedding example"
+	@echo ""
 	@echo "Testing:"
 	@echo "  make test           - Run all tests"
 	@echo "  make test-short     - Run tests with -short flag"
@@ -50,9 +58,17 @@ examples:
 	@mkdir -p bin
 	@go build -o bin/text-render examples/text-render/main.go
 	@go build -o bin/embedding examples/embedding/main.go
+	@go build -o bin/zelda-dungeon examples/01-zelda-dungeon/main.go
+	@go build -o bin/metroidvania-maze examples/02-metroidvania-maze/main.go
+	@go build -o bin/darksouls-challenge examples/03-darksouls-challenge/main.go
 	@echo "✓ Examples built:"
-	@echo "  - bin/text-render"
-	@echo "  - bin/embedding"
+	@echo "  Technical examples:"
+	@echo "    - bin/text-render"
+	@echo "    - bin/embedding"
+	@echo "  Game-style examples:"
+	@echo "    - bin/zelda-dungeon"
+	@echo "    - bin/metroidvania-maze"
+	@echo "    - bin/darksouls-challenge"
 
 ## test: Run all tests
 test:
@@ -227,7 +243,7 @@ update-golden:
 	@echo "✓ Golden snapshots updated"
 
 # Run examples
-.PHONY: run-text-render run-embedding
+.PHONY: run-text-render run-embedding run-zelda run-metroidvania run-darksouls run-all-games
 ## run-text-render: Run text rendering example
 run-text-render: examples
 	@echo "Running text-render example..."
@@ -237,6 +253,43 @@ run-text-render: examples
 run-embedding: examples
 	@echo "Running embedding example..."
 	@./bin/embedding
+
+## run-zelda: Run Zelda-style dungeon example
+run-zelda:
+	@echo "Running Zelda-style dungeon example..."
+	@cd examples/01-zelda-dungeon && go run main.go -config config.yaml
+
+## run-metroidvania: Run Metroidvania-style maze example
+run-metroidvania:
+	@echo "Running Metroidvania-style maze example..."
+	@cd examples/02-metroidvania-maze && go run main.go -config config.yaml
+
+## run-darksouls: Run Dark Souls challenge example
+run-darksouls:
+	@echo "Running Dark Souls challenge example..."
+	@cd examples/03-darksouls-challenge && go run main.go -config config.yaml
+
+## run-all-games: Run all game-style examples sequentially
+run-all-games:
+	@echo "═══════════════════════════════════════════════════════════"
+	@echo "Running All Game-Style Examples"
+	@echo "═══════════════════════════════════════════════════════════"
+	@echo ""
+	@echo "[1/3] Zelda-Style Dungeon"
+	@echo "───────────────────────────────────────────────────────────"
+	@cd examples/01-zelda-dungeon && go run main.go -config config.yaml
+	@echo ""
+	@echo "[2/3] Metroidvania-Style Maze"
+	@echo "───────────────────────────────────────────────────────────"
+	@cd examples/02-metroidvania-maze && go run main.go -config config.yaml
+	@echo ""
+	@echo "[3/3] Dark Souls Challenge"
+	@echo "───────────────────────────────────────────────────────────"
+	@cd examples/03-darksouls-challenge && go run main.go -config config.yaml
+	@echo ""
+	@echo "═══════════════════════════════════════════════════════════"
+	@echo "✓ All game examples completed!"
+	@echo "═══════════════════════════════════════════════════════════"
 
 # Version info
 .PHONY: version

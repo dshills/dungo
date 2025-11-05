@@ -1,0 +1,50 @@
+# Classic Zelda-Style Dungeon
+# Linear progression with key/lock gates, treasure rooms, and a final boss
+
+seed: 0  # Auto-generate unique seed each run (or set specific number like 12345)
+
+size:
+  roomsMin: 20
+  roomsMax: 25
+
+branching:
+  avg: 2.0      # Moderate branching - some choices but not maze-like
+  max: 3        # Occasional triple splits
+
+pacing:
+  curve: "S_CURVE"
+  variance: 0.1
+
+themes:
+  - crypt
+  - arcane
+
+# Classic key progression: small key, big key, boss key
+keys:
+  - name: "small_key"
+    count: 3
+  - name: "big_key"
+    count: 1
+  - name: "boss_key"
+    count: 1
+
+constraints:
+  - kind: "reachability"
+    severity: "hard"
+    expr: "keyBeforeLock(small_key)"
+    priority: 100
+  - kind: "reachability"
+    severity: "hard"
+    expr: "keyBeforeLock(big_key)"
+    priority: 90
+  - kind: "reachability"
+    severity: "hard"
+    expr: "keyBeforeLock(boss_key)"
+    priority: 80
+  - kind: "structure"
+    severity: "soft"
+    expr: "monotoneIncrease(start, boss, 0.8)"
+    priority: 50
+
+secretDensity: 0.15    # 15% secret rooms with bonus loot
+optionalRatio: 0.2     # 20% optional treasure rooms
