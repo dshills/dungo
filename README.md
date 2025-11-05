@@ -30,7 +30,7 @@ Dungo is a sophisticated procedural dungeon generation library that creates play
 ### Technical Features
 
 - **Constraint Validation**: Hard constraints (connectivity, key-before-lock) and soft constraints (pacing adherence)
-- **Performance**: Generates 60-room dungeons in <50ms (graph + embedding), <200ms total
+- **Performance**: Fast generation with optimized algorithms and minimal memory usage
 - **Extensible**: Plugin system for custom graph synthesizers, embedders, carvers, and content generators
 - **Battle-Tested**: Comprehensive test suite with unit, property, golden, and agent-based validation tests
 
@@ -129,7 +129,7 @@ func main() {
     // Access specific data
     for _, room := range artifact.ADG.Graph.Rooms {
         fmt.Printf("Room %s: %s (difficulty: %.2f)\n",
-            room.GetID(), room.GetArchetype(), room.GetDifficulty())
+            room.ID, room.Archetype.String(), room.Difficulty)
     }
 }
 ```
@@ -198,7 +198,7 @@ Control difficulty progression from start to boss:
 ```yaml
 pacing:
   curve: "CUSTOM"
-  customCurve:
+  customPoints:
     - [0.0, 0.0]     # [progress, difficulty]
     - [0.3, 0.2]
     - [0.7, 0.7]
@@ -217,7 +217,7 @@ themes:
   - arcane             # Magic traps, elementals, crystals
 ```
 
-See [`pkg/themes/builtin/`](pkg/themes/builtin/) for available themes and content tables.
+See [`themes/`](themes/) directory for available themes and content tables.
 
 ---
 
@@ -533,14 +533,15 @@ Dungo is optimized for fast generation with minimal memory usage.
 
 ### Benchmarks
 
-Typical performance on modern hardware (M1 Mac):
+Typical performance on modern hardware (Apple M4 Pro, 64GB RAM):
 
-| Dungeon Size | Rooms | Stage 1 (Graph) | Stage 2 (Embed) | Stage 3 (Carve) | Stage 4 (Content) | Total  |
-|--------------|-------|-----------------|-----------------|-----------------|-------------------|--------|
-| Small        | 10    | ~1ms            | ~2ms            | ~1ms            | ~1ms              | ~5ms   |
-| Medium       | 30    | ~3ms            | ~8ms            | ~3ms            | ~2ms              | ~16ms  |
-| Large        | 60    | ~8ms            | ~25ms           | ~8ms            | ~5ms              | ~46ms  |
-| Very Large   | 100   | ~15ms           | ~60ms           | ~15ms           | ~10ms             | ~100ms |
+| Dungeon Size | Rooms     | Total Time  | Memory   |
+|--------------|-----------|-------------|----------|
+| Small        | 10-20     | ~7ms        | ~5.6MB   |
+| Medium       | 20-40     | ~28ms       | ~5.6MB   |
+| Large        | 60        | ~102ms      | ~5.6MB   |
+| Very Large   | 60-100    | ~209ms      | ~5.6MB   |
+| Huge         | 100-150   | ~443ms      | ~5.6MB   |
 
 Memory usage: <50MB per generation for typical dungeons.
 
