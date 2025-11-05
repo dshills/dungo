@@ -3,6 +3,7 @@ package synthesis
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/dshills/dungo/pkg/graph"
 	"github.com/dshills/dungo/pkg/rng"
@@ -392,10 +393,18 @@ func createFallbackTemplate(category string) GraphTemplate {
 }
 
 // assignDifficultyTemplate assigns difficulty to all rooms based on pacing curve.
+// nolint:gocyclo // Complexity acceptable: pathfinding and pacing curve application
 func assignDifficultyTemplate(g *graph.Graph, rng *rng.RNG, cfg *Config) error {
-	// Find Start and Boss
+	// Find Start and Boss (use sorted iteration for determinism)
 	var startID, bossID string
-	for id, room := range g.Rooms {
+	roomIDs := make([]string, 0, len(g.Rooms))
+	for id := range g.Rooms {
+		roomIDs = append(roomIDs, id)
+	}
+	sort.Strings(roomIDs)
+
+	for _, id := range roomIDs {
+		room := g.Rooms[id]
 		if room.Archetype == graph.ArchetypeStart {
 			startID = id
 		} else if room.Archetype == graph.ArchetypeBoss {
@@ -433,8 +442,9 @@ func assignDifficultyTemplate(g *graph.Graph, rng *rng.RNG, cfg *Config) error {
 		room.Reward = room.Difficulty * 0.8 // Scale reward with difficulty
 	}
 
-	// Assign difficulty to off-path rooms
-	for id, room := range g.Rooms {
+	// Assign difficulty to off-path rooms (use sorted iteration for deterministic RNG consumption)
+	for _, id := range roomIDs {
+		room := g.Rooms[id]
 		if _, onPath := progressMap[id]; !onPath {
 			// Use average difficulty of neighbors
 			avgDifficulty := 0.5

@@ -118,6 +118,7 @@ type ExploreResult struct {
 // FindPath attempts to find a path from the current room to a target room archetype.
 // Uses breadth-first search with capability tracking to find the shortest valid path.
 // Returns ExploreResult indicating if target was found and the path taken.
+// nolint:gocyclo // Complexity acceptable: BFS pathfinding with inventory and gate checking
 func (a *Agent) FindPath(g *graph.Graph, targetArchetype graph.RoomArchetype) ExploreResult {
 	// Find target room
 	var targetRoom *graph.Room
@@ -264,6 +265,7 @@ func VerifyBossFindable(g *graph.Graph) (bool, []string, error) {
 
 // VerifyKeyFindable checks if a specific key is reachable from the start.
 // Returns true if the key room can be reached, false otherwise.
+// nolint:gocyclo // Complexity acceptable: pathfinding with inventory and gate validation
 func VerifyKeyFindable(g *graph.Graph, keyType, keyValue string) (bool, []string, error) {
 	// Find start room
 	var startRoom *graph.Room
@@ -403,6 +405,7 @@ type ExplorationStats struct {
 
 // SimulateExploration performs a simulated exploration of the dungeon.
 // Uses greedy BFS to explore as much as possible with capability collection.
+// nolint:gocyclo // Complexity acceptable: exploration simulation with state tracking
 func SimulateExploration(g *graph.Graph) (*ExplorationStats, error) {
 	// Find start room
 	var startRoom *graph.Room

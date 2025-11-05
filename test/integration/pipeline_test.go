@@ -189,3 +189,49 @@ func TestGolden_Determinism(t *testing.T) {
 
 	t.Log("✓ Same seed produced consistent output structure")
 }
+
+// TestIntegration_PathologicalSeed is a regression test for seed 0x4400f4
+// which previously caused "no valid path found" errors due to insufficient corridor length scaling.
+// This seed produces spread-out layouts that require longer corridors.
+func TestIntegration_PathologicalSeed(t *testing.T) {
+	cfg := &dungeon.Config{
+		Seed: 0x4400f4,
+		Size: dungeon.SizeCfg{
+			RoomsMin: 25,
+			RoomsMax: 30,
+		},
+		Branching: dungeon.BranchingCfg{
+			Avg: 2.0,
+			Max: 4,
+		},
+		Pacing: dungeon.PacingCfg{
+			Curve:    dungeon.PacingSCurve,
+			Variance: 0.1,
+		},
+		Themes:        []string{"crypt"},
+		SecretDensity: 0.15,
+		OptionalRatio: 0.20,
+	}
+
+	gen := dungeon.NewGeneratorWithValidator(validation.NewValidator())
+	artifact, err := gen.Generate(context.Background(), cfg)
+
+	if err != nil {
+		t.Fatalf("Pathological seed 0x4400f4 failed generation: %v", err)
+	}
+
+	if artifact.ADG == nil {
+		t.Fatal("Artifact missing ADG")
+	}
+
+	// Verify the dungeon has rooms and is connected
+	if len(artifact.ADG.Rooms) < cfg.Size.RoomsMin {
+		t.Errorf("Generated %d rooms, expected at least %d", len(artifact.ADG.Rooms), cfg.Size.RoomsMin)
+	}
+
+	if !artifact.ADG.IsWeaklyConnected() {
+		t.Error("Generated dungeon is not connected")
+	}
+
+	t.Logf("✓ Pathological seed 0x4400f4 handled successfully: %d rooms", len(artifact.ADG.Rooms))
+}

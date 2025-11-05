@@ -2,6 +2,7 @@ package graph
 
 import (
 	"fmt"
+	"sort"
 )
 
 // Graph represents the complete Abstract Dungeon Graph (ADG).
@@ -210,12 +211,13 @@ func (g *Graph) IsConnected() bool {
 		return true
 	}
 
-	// Pick any room as starting point
-	var startID string
+	// Pick deterministic starting point (lexicographically first room ID)
+	roomIDs := make([]string, 0, len(g.Rooms))
 	for id := range g.Rooms {
-		startID = id
-		break
+		roomIDs = append(roomIDs, id)
 	}
+	sort.Strings(roomIDs)
+	startID := roomIDs[0]
 
 	// Get all reachable rooms from start
 	reachable := g.GetReachable(startID)
@@ -232,12 +234,13 @@ func (g *Graph) IsWeaklyConnected() bool {
 		return true
 	}
 
-	// Pick any room as starting point
-	var startID string
+	// Pick deterministic starting point (lexicographically first room ID)
+	roomIDs := make([]string, 0, len(g.Rooms))
 	for id := range g.Rooms {
-		startID = id
-		break
+		roomIDs = append(roomIDs, id)
 	}
+	sort.Strings(roomIDs)
+	startID := roomIDs[0]
 
 	// Build undirected adjacency (treat all edges as bidirectional)
 	undirectedAdj := make(map[string][]string)

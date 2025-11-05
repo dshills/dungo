@@ -3,6 +3,7 @@ package synthesis
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/dshills/dungo/pkg/graph"
 	"github.com/dshills/dungo/pkg/rng"
@@ -260,8 +261,11 @@ func (s *GrammarSynthesizer) applyExpandHub(g *graph.Graph, rng *rng.RNG, cfg *C
 	}
 
 	if hub == nil {
-		// All hubs are at max capacity, find a different room
-		for _, room := range g.Rooms {
+		// All hubs are at max capacity, find a different room (use sorted iteration for determinism)
+		roomIDs := getSortedRoomIDs(g)
+
+		for _, id := range roomIDs {
+			room := g.Rooms[id]
 			currentConnections := len(g.Adjacency[room.ID])
 			if currentConnections < cfg.BranchingMax {
 				hub = room
@@ -581,9 +585,24 @@ func (s *GrammarSynthesizer) validateKeyLockConstraints(g *graph.Graph) error {
 
 // Helper methods
 
+// getSortedRoomIDs returns room IDs sorted lexicographically for deterministic iteration.
+// This helper reduces code duplication and ensures consistent ordering across the synthesizer.
+func getSortedRoomIDs(g *graph.Graph) []string {
+	roomIDs := make([]string, 0, len(g.Rooms))
+	for id := range g.Rooms {
+		roomIDs = append(roomIDs, id)
+	}
+	sort.Strings(roomIDs)
+	return roomIDs
+}
+
 func (s *GrammarSynthesizer) findRoomsByArchetype(g *graph.Graph, archetype graph.RoomArchetype) []*graph.Room {
+	// Use sorted iteration for deterministic room order
+	roomIDs := getSortedRoomIDs(g)
+
 	var rooms []*graph.Room
-	for _, room := range g.Rooms {
+	for _, id := range roomIDs {
+		room := g.Rooms[id]
 		if room.Archetype == archetype {
 			rooms = append(rooms, room)
 		}
@@ -606,8 +625,12 @@ func (s *GrammarSynthesizer) getAllRooms(g *graph.Graph) []*graph.Room {
 }
 
 func (s *GrammarSynthesizer) getRoomsWithCapacity(g *graph.Graph, cfg *Config) []*graph.Room {
+	// Use sorted iteration for deterministic RNG consumption
+	roomIDs := getSortedRoomIDs(g)
+
 	rooms := make([]*graph.Room, 0, len(g.Rooms))
-	for _, room := range g.Rooms {
+	for _, id := range roomIDs {
+		room := g.Rooms[id]
 		currentConnections := len(g.Adjacency[room.ID])
 		if currentConnections < cfg.BranchingMax {
 			rooms = append(rooms, room)
@@ -709,8 +732,11 @@ func (s *GrammarSynthesizer) assignDifficulty(g *graph.Graph, rng *rng.RNG, cfg 
 		progressMap[roomID] = progress
 	}
 
-	// Assign difficulty to all rooms
-	for roomID, room := range g.Rooms {
+	// Assign difficulty to all rooms (use sorted iteration for deterministic RNG consumption)
+	roomIDs := getSortedRoomIDs(g)
+
+	for _, roomID := range roomIDs {
+		room := g.Rooms[roomID]
 		var difficulty float64
 
 		if progress, onPath := progressMap[roomID]; onPath {

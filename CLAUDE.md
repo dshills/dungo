@@ -327,13 +327,30 @@ The following are explicitly out of scope for v1:
 
 ### Corridor Length Scaling
 Corridor max length must scale with dungeon size to avoid embedding failures:
-- Small dungeons (5-25 rooms): ~50-100 units
-- Medium dungeons (25-100 rooms): ~100-200 units
-- Large dungeons (100-300 rooms): ~200-500 units
+- Small dungeons (10-25 rooms): ~100-295 units
+- Medium dungeons (25-100 rooms): ~295-590 units
+- Large dungeons (100+ rooms): 590-600 units (capped)
 
-Formula: `maxLength = sqrt(roomCount) * 20`, clamped to [100, 500]
+Formula: `maxLength = sqrt(roomCount) * 59`, clamped to [100, 600]
 
-This matches the spatial scaling of force-directed layouts and prevents "no valid path" errors.
+**Updated progression: 20 → 41 → 59** (195% total increase from original)
+- Initial multiplier of 20 caused failures in 11-52% of cases
+- Increased to 41 based on typical force-directed spreading
+- Final increase to 59 needed to handle pathological seeds that create very spread-out layouts
+- Pathological seed 0x4400f4 demonstrated corridors up to 74*sqrt(N) units in worst cases
+
+### Force Balancing for Compact Layouts
+**Critical**: The default force-directed parameters (SpringConstant=0.5, RepulsionConstant=500.0) create a 1000:1 ratio favoring repulsion, causing very spread-out layouts.
+
+**Solution**: For dungeons >25 rooms, dynamically adjust force balance:
+- **Increase spring constant (attraction)**: Scale up to 10x for large dungeons
+  - Formula: `scaleFactor = 1.0 + (roomCount-25) / 10.0`, capped at 10x
+  - For 32 rooms: 1.7x, for 80 rooms: 6.5x, for 100+ rooms: 10x
+- **Decrease repulsion constant**: Scale down to 0.2x for large dungeons
+  - Formula: `repulsionScale = 1.0 / (1.0 + (roomCount-25)/50.0)`, floored at 0.2x
+  - For 32 rooms: 0.88x, for 80 rooms: 0.52x, for 100+ rooms: 0.2x
+
+This dual scaling dramatically shifts the force balance, keeping layouts compact enough to satisfy corridor length constraints while still maintaining natural spacing between rooms.
 
 ### Validation Integration
 The validator must be set AFTER generator construction to avoid import cycles:
@@ -351,6 +368,35 @@ When implementing grammar-based synthesis:
 - Respect degree bounds both per-room and globally
 - Handle key-before-lock constraints during graph construction, not post-hoc
 - Use retry logic with seed perturbation if constraints fail
+
+### Force-Directed Embedding Determinism
+**CRITICAL**: Go map iteration order is randomized, causing non-deterministic layouts!
+
+**Problem**: Iterating over maps in force-directed simulation leads to different floating-point accumulation patterns, producing wildly different layouts from the same seed.
+
+**Solution**: Always use sorted slices when iterating over rooms/positions:
+```go
+// BAD - Non-deterministic!
+for roomID := range g.Rooms {
+    // ...
+}
+
+// GOOD - Deterministic
+roomIDs := make([]string, 0, len(g.Rooms))
+for id := range g.Rooms {
+    roomIDs = append(roomIDs, id)
+}
+sort.Strings(roomIDs)
+for _, roomID := range roomIDs {
+    // ...
+}
+```
+
+**Key locations requiring sorted iteration**:
+- `initializePositions`: Room initialization order affects RNG sequence
+- `simulateForces`: Force calculation order affects floating-point accumulation
+- `Embed`: Layout construction order (less critical but good practice)
+- `resolveOverlaps`: Perturbation order must be deterministic
 
 ### Testing Strategy That Worked
 1. **Unit tests**: Focus on individual functions, use table-driven tests

@@ -3,6 +3,7 @@ package embedding
 import (
 	"fmt"
 	"math"
+	"sort"
 
 	"github.com/dshills/dungo/pkg/graph"
 	"github.com/dshills/dungo/pkg/rng"
@@ -59,11 +60,20 @@ func (e *ForceDirectedEmbedder) Embed(g *graph.Graph, rng *rng.RNG) (*Layout, er
 	}
 
 	// Phase 5: Convert to Layout with Poses
+	// Use sorted room IDs for deterministic layout construction
 	layout := NewLayout()
 	layout.Algorithm = e.Name()
 	layout.Seed = rng.Seed()
 
-	for roomID, pos := range positions {
+	// Sort room IDs for deterministic order
+	roomIDs := make([]string, 0, len(positions))
+	for id := range positions {
+		roomIDs = append(roomIDs, id)
+	}
+	sort.Strings(roomIDs)
+
+	for _, roomID := range roomIDs {
+		pos := positions[roomID]
 		room := g.Rooms[roomID]
 		width, height := SizeToGridDimensions(room.Size)
 
@@ -103,10 +113,19 @@ type position struct {
 }
 
 // initializePositions places rooms at random positions in a circle.
+// CRITICAL: Uses sorted room IDs to ensure deterministic initialization.
 func (e *ForceDirectedEmbedder) initializePositions(g *graph.Graph, rng *rng.RNG) map[string]*position {
 	positions := make(map[string]*position, len(g.Rooms))
 
+	// Sort room IDs for deterministic iteration order
+	roomIDs := make([]string, 0, len(g.Rooms))
 	for roomID := range g.Rooms {
+		roomIDs = append(roomIDs, roomID)
+	}
+	sort.Strings(roomIDs)
+
+	// Initialize positions in deterministic order
+	for _, roomID := range roomIDs {
 		// Random angle and radius for circular initial placement
 		angle := rng.Float64() * 2 * math.Pi
 		radius := rng.Float64() * e.config.InitialSpread
@@ -123,15 +142,23 @@ func (e *ForceDirectedEmbedder) initializePositions(g *graph.Graph, rng *rng.RNG
 }
 
 // simulateForces runs the force-directed simulation.
+// CRITICAL: Uses sorted room IDs throughout to ensure deterministic force calculations.
 func (e *ForceDirectedEmbedder) simulateForces(g *graph.Graph, positions map[string]*position, rng *rng.RNG) error {
 	dt := 0.1 // Time step
+
+	// Create sorted room IDs once for deterministic iteration
+	roomIDs := make([]string, 0, len(positions))
+	for id := range positions {
+		roomIDs = append(roomIDs, id)
+	}
+	sort.Strings(roomIDs)
 
 	for iter := 0; iter < e.config.MaxIterations; iter++ {
 		// Calculate forces for each room
 		forces := make(map[string]struct{ fx, fy float64 }, len(positions))
 
-		// Initialize forces to zero
-		for roomID := range positions {
+		// Initialize forces to zero in deterministic order
+		for _, roomID := range roomIDs {
 			forces[roomID] = struct{ fx, fy float64 }{0, 0}
 		}
 
@@ -164,11 +191,7 @@ func (e *ForceDirectedEmbedder) simulateForces(g *graph.Graph, positions map[str
 		}
 
 		// Apply repulsion forces (all rooms repel each other)
-		roomIDs := make([]string, 0, len(positions))
-		for id := range positions {
-			roomIDs = append(roomIDs, id)
-		}
-
+		// Use the sorted roomIDs from above for deterministic pair iteration
 		for i := 0; i < len(roomIDs); i++ {
 			for j := i + 1; j < len(roomIDs); j++ {
 				id1 := roomIDs[i]
@@ -202,9 +225,10 @@ func (e *ForceDirectedEmbedder) simulateForces(g *graph.Graph, positions map[str
 			}
 		}
 
-		// Update velocities and positions with damping
+		// Update velocities and positions with damping in deterministic order
 		maxMovement := 0.0
-		for roomID, pos := range positions {
+		for _, roomID := range roomIDs {
+			pos := positions[roomID]
 			force := forces[roomID]
 
 			// Update velocity: v = v * damping + F * dt
@@ -270,14 +294,7 @@ func (e *ForceDirectedEmbedder) resolveOverlaps(g *graph.Graph, positions map[st
 			for id := range positions {
 				roomIDs = append(roomIDs, id)
 			}
-			// Simple sort for determinism
-			for i := 0; i < len(roomIDs); i++ {
-				for j := i + 1; j < len(roomIDs); j++ {
-					if roomIDs[i] > roomIDs[j] {
-						roomIDs[i], roomIDs[j] = roomIDs[j], roomIDs[i]
-					}
-				}
-			}
+			sort.Strings(roomIDs)
 
 			for _, id := range roomIDs {
 				pos := positions[id]

@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"runtime"
 	"testing"
+
+	"github.com/dshills/dungo/pkg/carving"
+	"github.com/dshills/dungo/pkg/embedding"
+	"github.com/dshills/dungo/pkg/rng"
 )
 
 // BenchmarkFullGeneration benchmarks the complete dungeon generation pipeline
@@ -257,21 +261,15 @@ func BenchmarkGenerationByStage(b *testing.B) {
 	}
 
 	b.Run("Stage1_Synthesis", func(b *testing.B) {
-		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			// Just synthesis stage is measured in synthesis_bench_test.go
-			// This is a reference point showing it in context
-			b.Skip("Use synthesis_bench_test.go for synthesis-only benchmarks")
-		}
+		// Just synthesis stage is measured in synthesis_bench_test.go
+		// This is a reference point showing it in context
+		b.Skip("Use synthesis_bench_test.go for synthesis-only benchmarks")
 	})
 
 	b.Run("Stage2_Embedding", func(b *testing.B) {
-		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			// Just embedding stage is measured in embedding_bench_test.go
-			// This is a reference point showing it in context
-			b.Skip("Use embedding_bench_test.go for embedding-only benchmarks")
-		}
+		// Just embedding stage is measured in embedding_bench_test.go
+		// This is a reference point showing it in context
+		b.Skip("Use embedding_bench_test.go for embedding-only benchmarks")
 	})
 
 	b.Run("Stage3_Carving", func(b *testing.B) {
@@ -294,7 +292,7 @@ func BenchmarkGenerationByStage(b *testing.B) {
 		configHash := cfg.Hash()
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			contentRNG := newRNG(uint64(12345+i), "content", configHash)
+			contentRNG := rng.NewRNG(uint64(12345+i), "content", configHash)
 			_, err := gen.contentPass.Place(ctx, artifact.ADG.Graph, contentRNG)
 			if err != nil {
 				b.Fatalf("content failed: %v", err)
@@ -421,11 +419,11 @@ func (m *mockValidator) Validate(ctx context.Context, artifact *Artifact, cfg *C
 	return &ValidationReport{
 		Passed: true,
 		Metrics: &Metrics{
-			PathLength:     10,
-			CycleCount:     2,
-			BranchingAvg:   2.0,
-			RoomCount:      len(artifact.ADG.Rooms),
-			ConnectorCount: len(artifact.ADG.Connectors),
+			BranchingFactor:   2.0,
+			PathLength:        10,
+			CycleCount:        2,
+			PacingDeviation:   0.1,
+			SecretFindability: 0.8,
 		},
 		Errors:   []string{},
 		Warnings: []string{},
@@ -437,28 +435,74 @@ type mockGraphAdapter struct {
 	roomCount int
 }
 
-func (m *mockGraphAdapter) GetRooms() []interface{} {
-	rooms := make([]interface{}, m.roomCount)
-	for i := range rooms {
-		rooms[i] = struct{}{}
-	}
-	return rooms
+func (m *mockGraphAdapter) GetRoom(id string) carving.Room {
+	return &mockRoom{id: id}
 }
 
-func (m *mockGraphAdapter) GetConnectors() []interface{} {
-	conns := make([]interface{}, m.roomCount-1)
-	for i := range conns {
-		conns[i] = struct{}{}
+func (m *mockGraphAdapter) GetConnector(id string) carving.Connector {
+	return &mockConnector{id: id}
+}
+
+func (m *mockGraphAdapter) GetRoomIDs() []string {
+	ids := make([]string, m.roomCount)
+	for i := range ids {
+		ids[i] = fmt.Sprintf("R%03d", i)
 	}
-	return conns
+	return ids
+}
+
+func (m *mockGraphAdapter) GetConnectorIDs() []string {
+	ids := make([]string, m.roomCount-1)
+	for i := range ids {
+		ids[i] = fmt.Sprintf("C%03d", i)
+	}
+	return ids
+}
+
+// mockRoom implements carving.Room
+type mockRoom struct {
+	id string
+}
+
+func (m *mockRoom) GetID() string {
+	return m.id
+}
+
+func (m *mockRoom) GetSize() carving.RoomSize {
+	return carving.SizeM
+}
+
+// mockConnector implements carving.Connector
+type mockConnector struct {
+	id string
+}
+
+func (m *mockConnector) GetID() string {
+	return m.id
+}
+
+func (m *mockConnector) GetFrom() string {
+	return "R000"
+}
+
+func (m *mockConnector) GetTo() string {
+	return "R001"
+}
+
+func (m *mockConnector) GetType() carving.ConnectorType {
+	return carving.TypeCorridor
+}
+
+func (m *mockConnector) GetGate() *carving.Gate {
+	return nil
 }
 
 // createTestEmbeddingLayout creates a test embedding layout for benchmarking conversions.
-func createTestEmbeddingLayout(roomCount int) *embeddingLayout {
-	layout := &embeddingLayout{
-		Poses:         make(map[string]*embeddingPose),
-		CorridorPaths: make(map[string]*embeddingPath),
-		Bounds: embeddingBounds{
+func createTestEmbeddingLayout(roomCount int) *embedding.Layout {
+	layout := &embedding.Layout{
+		Poses:         make(map[string]*embedding.Pose),
+		CorridorPaths: make(map[string]*embedding.Path),
+		Bounds: embedding.Rect{
 			MinX: 0,
 			MinY: 0,
 			MaxX: float64(roomCount * 10),
@@ -469,7 +513,7 @@ func createTestEmbeddingLayout(roomCount int) *embeddingLayout {
 	// Add test poses
 	for i := 0; i < roomCount; i++ {
 		roomID := fmt.Sprintf("R%03d", i)
-		layout.Poses[roomID] = &embeddingPose{
+		layout.Poses[roomID] = &embedding.Pose{
 			X:           float64(i * 10),
 			Y:           float64(i * 10),
 			Width:       8,
@@ -482,8 +526,8 @@ func createTestEmbeddingLayout(roomCount int) *embeddingLayout {
 	// Add test corridor paths
 	for i := 0; i < roomCount-1; i++ {
 		connID := fmt.Sprintf("C%03d", i)
-		layout.CorridorPaths[connID] = &embeddingPath{
-			Points: []embeddingPoint{
+		layout.CorridorPaths[connID] = &embedding.Path{
+			Points: []embedding.Point{
 				{X: float64(i * 10), Y: float64(i * 10)},
 				{X: float64((i + 1) * 10), Y: float64((i + 1) * 10)},
 			},
@@ -491,55 +535,4 @@ func createTestEmbeddingLayout(roomCount int) *embeddingLayout {
 	}
 
 	return layout
-}
-
-// Helper types for embedding layout simulation (mimicking pkg/embedding types)
-type embeddingLayout struct {
-	Poses         map[string]*embeddingPose
-	CorridorPaths map[string]*embeddingPath
-	Bounds        embeddingBounds
-}
-
-type embeddingPose struct {
-	X, Y        float64
-	Width       int
-	Height      int
-	Rotation    int
-	FootprintID string
-}
-
-type embeddingPath struct {
-	Points []embeddingPoint
-}
-
-type embeddingPoint struct {
-	X, Y float64
-}
-
-type embeddingBounds struct {
-	MinX, MinY, MaxX, MaxY float64
-}
-
-func (b embeddingBounds) Width() float64 {
-	return b.MaxX - b.MinX
-}
-
-func (b embeddingBounds) Height() float64 {
-	return b.MaxY - b.MinY
-}
-
-// Helper to create RNG (wrapping pkg/rng for benchmarks)
-func newRNG(seed uint64, context string, configHash []byte) *mockRNG {
-	// This is a simplified version for benchmarking
-	// Real implementation would use pkg/rng.NewRNG
-	return &mockRNG{seed: seed}
-}
-
-type mockRNG struct {
-	seed uint64
-}
-
-func (r *mockRNG) Uint64n(n uint64) uint64 {
-	// Simplified for benchmarking
-	return r.seed % n
 }

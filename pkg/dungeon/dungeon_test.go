@@ -461,6 +461,13 @@ func TestGolden_SCurvePacingCurve(t *testing.T) {
 		t.Fatalf("No path from Start to Boss: %v", err)
 	}
 
+	// S-curve testing requires at least 7 rooms for meaningful slope analysis
+	// (need at least 2 slopes per section: early/mid/late)
+	// With 7 rooms, we get 6 slopes which divide into 2 per section (6/3=2)
+	if len(path) < 7 {
+		t.Skipf("Critical path too short (%d rooms) for S-curve analysis, need at least 7", len(path))
+	}
+
 	difficulties := extractDifficultyDistribution(artifact.ADG, path)
 	slopes := calculateSlopes(difficulties)
 

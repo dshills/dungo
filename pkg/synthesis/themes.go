@@ -2,6 +2,7 @@ package synthesis
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/dshills/dungo/pkg/graph"
 	"github.com/dshills/dungo/pkg/rng"
@@ -61,6 +62,9 @@ func assignMultiTheme(g *graph.Graph, themes []string, rng *rng.RNG) error {
 		roomIDs = append(roomIDs, id)
 	}
 
+	// Sort room IDs for deterministic order before shuffling
+	sort.Strings(roomIDs)
+
 	// Shuffle room IDs for random seed selection
 	rng.Shuffle(len(roomIDs), func(i, j int) {
 		roomIDs[i], roomIDs[j] = roomIDs[j], roomIDs[i]
@@ -108,7 +112,14 @@ func assignMultiTheme(g *graph.Graph, themes []string, rng *rng.RNG) error {
 	}
 
 	// Step 3: Assign any remaining unassigned rooms (shouldn't happen, but safety check)
-	for roomID := range g.Rooms {
+	// Use sorted iteration for deterministic RNG consumption
+	unassignedIDs := make([]string, 0, len(g.Rooms))
+	for id := range g.Rooms {
+		unassignedIDs = append(unassignedIDs, id)
+	}
+	sort.Strings(unassignedIDs)
+
+	for _, roomID := range unassignedIDs {
 		if !assigned[roomID] {
 			// Assign to the theme of a neighboring room, or random theme
 			neighborTheme := findNeighborTheme(g, roomID, themeAssignments)

@@ -69,6 +69,7 @@ func main() {
 	}
 }
 
+// nolint:gocyclo // Complexity acceptable: CLI argument handling and output formatting
 func run() error {
 	ctx := context.Background()
 

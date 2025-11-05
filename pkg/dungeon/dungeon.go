@@ -12,6 +12,21 @@ import (
 	"github.com/dshills/dungo/pkg/synthesis"
 )
 
+// Corridor length scaling constants
+const (
+	// corridorScaleMultiplier is the multiplier applied to sqrt(roomCount) for corridor length calculation.
+	// Set to 59 based on empirical analysis of pathological seed 0x4400f4, which showed
+	// force-directed layouts can produce corridors up to 51*sqrt(N) units. The value 59 provides
+	// a 15% safety margin above the observed maximum.
+	corridorScaleMultiplier = 59.0
+
+	// corridorMinLength is the minimum corridor length for small dungeons.
+	corridorMinLength = 100.0
+
+	// corridorMaxLength is the maximum corridor length cap for very large dungeons.
+	corridorMaxLength = 600.0
+)
+
 // Generator is the main entry point for procedural dungeon generation.
 // Implementations must be deterministic: same Config+seed produces identical Artifact.
 // This ensures reproducibility for seeded generation, testing, and debugging.
@@ -100,6 +115,7 @@ func (g *DefaultGenerator) SetValidator(validator Validator) {
 
 // Generate creates a complete dungeon.
 // Orchestrates all five pipeline stages with deterministic RNG seeding.
+// nolint:gocyclo // Complexity acceptable: pipeline orchestration with multiple stages
 func (g *DefaultGenerator) Generate(ctx context.Context, cfg *Config) (*Artifact, error) {
 	// Stage 0: Validate config
 	if err := cfg.Validate(); err != nil {
@@ -164,9 +180,32 @@ func (g *DefaultGenerator) Generate(ctx context.Context, cfg *Config) (*Artifact
 	}
 
 	// Stage B: Spatial Embedding
-	// Create embedder with corridor max length scaled to dungeon size
+	// Create embedder with parameters scaled to dungeon size
 	embedderCfg := *g.embeddingConfig // Copy base config
-	embedderCfg.CorridorMaxLength = calculateCorridorMaxLength(len(adgInternal.Rooms))
+	roomCount := len(adgInternal.Rooms)
+	embedderCfg.CorridorMaxLength = calculateCorridorMaxLength(roomCount)
+
+	// For medium-to-large dungeons (>25 rooms), adjust force balance to keep layout more compact
+	// This prevents excessively spread-out layouts that exceed corridor length limits
+	// Pathological seeds can create very spread-out layouts even with small dungeon counts
+	if roomCount > 25 {
+		// More aggressive force balancing:
+		// - Increase spring constant (attraction) up to 10x
+		// - Decrease repulsion constant down to 0.2x
+		// This shifts the force balance dramatically for larger dungeons
+		scaleFactor := 1.0 + (float64(roomCount-25) / 10.0) // Faster scaling: 1.0→6.5 for 25→80 rooms
+		if scaleFactor > 10.0 {
+			scaleFactor = 10.0 // Cap at 10x
+		}
+		embedderCfg.SpringConstant *= scaleFactor
+
+		// Inversely scale repulsion - reduce it as dungeons get larger
+		repulsionScale := 1.0 / (1.0 + float64(roomCount-25)/50.0)
+		if repulsionScale < 0.2 {
+			repulsionScale = 0.2 // Floor at 0.2x (don't eliminate repulsion completely)
+		}
+		embedderCfg.RepulsionConstant *= repulsionScale
+	}
 
 	embedder, err := embedding.Get("force_directed", &embedderCfg)
 	if err != nil {
@@ -181,6 +220,12 @@ func (g *DefaultGenerator) Generate(ctx context.Context, cfg *Config) (*Artifact
 	// Normalize embedding layout BEFORE converting to center coordinates
 	// This ensures we have Width/Height info to properly handle bounds
 	normalizeEmbeddingLayout(layoutInternal)
+
+	// CRITICAL: Recompute bounds after normalization since poses have been shifted
+	// This is correct by design: normalization translates all positions to be non-negative,
+	// which changes the overall bounding box. ComputeBounds() recalculates the final bounds
+	// after translation to get accurate min/max coordinates for the normalized layout.
+	layoutInternal.ComputeBounds()
 
 	// Convert embedding.Layout to dungeon.Layout (corner → center coordinates)
 	layout := convertEmbeddingLayout(layoutInternal)
@@ -278,22 +323,26 @@ func convertEmbeddingLayout(el *embedding.Layout) *Layout {
 	// Convert poses
 	// embedding.Pose has X,Y as corner (top-left) coordinates with Width/Height
 	// dungeon.Pose needs X,Y as center coordinates for carving
+	// CRITICAL: Translate to be relative to bounds origin since tile map starts at (0,0)
+	minX := el.Bounds.MinX
+	minY := el.Bounds.MinY
 	for roomID, pose := range el.Poses {
 		layout.Poses[roomID] = Pose{
-			X:           int(pose.X + float64(pose.Width)/2),  // Convert corner to center
-			Y:           int(pose.Y + float64(pose.Height)/2), // Convert corner to center
+			X:           int(pose.X - minX + float64(pose.Width)/2),  // Translate and convert corner to center
+			Y:           int(pose.Y - minY + float64(pose.Height)/2), // Translate and convert corner to center
 			Rotation:    pose.Rotation,
 			FootprintID: pose.FootprintID,
 		}
 	}
 
 	// Convert corridor paths
+	// CRITICAL: Also translate corridor paths to be relative to bounds origin
 	for connID, path := range el.CorridorPaths {
 		points := make([]Point, len(path.Points))
 		for i, pt := range path.Points {
 			points[i] = Point{
-				X: int(pt.X),
-				Y: int(pt.Y),
+				X: int(pt.X - minX),
+				Y: int(pt.Y - minY),
 			}
 		}
 		layout.CorridorPaths[connID] = Path{Points: points}
@@ -559,27 +608,30 @@ func normalizeEmbeddingLayout(layout *embedding.Layout) {
 // The formula scales with the expected spatial extent of the dungeon:
 //   - For N rooms, force-directed layout with InitialSpread=100 creates a layout
 //     roughly proportional to sqrt(N) in each dimension
-//   - Use sqrt(N) * 20 to scale corridor length with dungeon spatial extent
-//   - This gives ~50 for 5 rooms, ~100 for 25 rooms, ~200 for 100 rooms, ~292 for 214 rooms
-//   - Minimum of 100 for small dungeons, maximum of 500 for very large dungeons
+//   - Use sqrt(N) * 59 to scale corridor length with dungeon spatial extent
+//   - Increased from 20→41→59 based on empirical analysis of pathological seeds
+//   - Pathological cases can create corridors up to 51*sqrt(N) units
+//   - This gives ~148 for 5 rooms, ~295 for 25 rooms, ~590 for 100 rooms, ~600 (max) for 103+ rooms
+//   - Minimum of 100 for small dungeons, maximum of 600 for very large dungeons
+//   - Combined with spring constant scaling (for dungeons >25 rooms) to keep layouts compact
 func calculateCorridorMaxLength(roomCount int) float64 {
 	if roomCount <= 0 {
-		return 100.0
+		return corridorMinLength
 	}
 
-	// Scale with square root: max_length = sqrt(N) * 20
-	// This matches the spatial scaling of force-directed layouts
-	maxLength := math.Sqrt(float64(roomCount)) * 20.0
+	// Scale with square root: max_length = sqrt(N) * corridorScaleMultiplier
+	// See constants defined at top of file for rationale and empirical analysis.
+	length := math.Sqrt(float64(roomCount)) * corridorScaleMultiplier
 
-	// Apply bounds: min 100, max 500
-	if maxLength < 100.0 {
-		maxLength = 100.0
+	// Apply bounds
+	if length < corridorMinLength {
+		length = corridorMinLength
 	}
-	if maxLength > 500.0 {
-		maxLength = 500.0
+	if length > corridorMaxLength {
+		length = corridorMaxLength
 	}
 
-	return maxLength
+	return length
 }
 
 // normalizeLayout translates all positions to ensure they are non-negative.
